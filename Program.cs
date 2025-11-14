@@ -22,7 +22,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
 
-// Agregar AutoMapper
+
+// ============================================
+// CONFIGURACIÓN DE AUTOMAPPER
+// ============================================
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // ========================================
@@ -60,6 +63,12 @@ builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
 builder.Services.AddScoped<IContratoProveedorRepository, ContratoProveedorRepository>();
 
 // ========================================
+// REGISTRAR REPOSITORIES - AEROLÍNEAS
+// ========================================
+
+builder.Services.AddScoped<IAerolineaRepository, AerolineaRepository>();
+
+// ========================================
 // REGISTRAR SERVICES - ROLES Y PERMISOS
 // ========================================
 
@@ -87,6 +96,12 @@ builder.Services.AddScoped<IEmpleadoService, EmpleadoService>();
 
 builder.Services.AddScoped<IProveedorService, ProveedorService>();
 builder.Services.AddScoped<IContratoProveedorService, ContratoProveedorService>();
+
+// ========================================
+// REGISTRAR SERVICES - AEROLÍNEAS
+// ========================================
+
+builder.Services.AddScoped<IAerolineaService, AerolineaService>();
 
 // ========================================
 // REGISTRAR FLUENTVALIDATION
@@ -189,6 +204,8 @@ Console.WriteLine("   • Configuración (Roles y Permisos)");
 Console.WriteLine("   • Usuarios (Gestión y Autenticación)");
 Console.WriteLine("   • Clientes (CRM - Categorías, Clientes, Preferencias)");
 Console.WriteLine("   • Empleados (CRM - Gestión de Personal)");
+Console.WriteLine("   • Proveedores (Contratos de proveedores)");
+Console.WriteLine("   • Servicios (Aerolíneas)");
 Console.WriteLine();
 
 app.Run();

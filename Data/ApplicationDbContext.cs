@@ -91,6 +91,19 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<ContratoProveedor> ContratosProveedor { get; set; }
 
+    // ========================================
+    // MÓDULO: Servicios
+    // ========================================
+
+    /// <summary>
+    /// Tabla de Aerolíneas
+    /// </summary>
+    public DbSet<Aerolinea> Aerolineas { get; set; }
+
+    /// <summary>
+    /// Tabla de Vuelos
+    /// </summary>
+    public DbSet<Vuelo> Vuelos { get; set; }
 
     // ========================================
     // CONFIGURACIÓN AVANZADA DE ENTIDADES
@@ -450,5 +463,40 @@ public class ApplicationDbContext : DbContext
 
             // Relación con Proveedor (N:1) - ya configurada desde Proveedor
         });
+
+        // ============================================
+        // CONFIGURACIÓN DE LA TABLA: AEROLÍNEAS
+        // ============================================
+
+        modelBuilder.Entity<Aerolinea>(entity =>
+        {
+            // Índice único en código IATA
+            entity.HasIndex(e => e.CodigoIata)
+                .IsUnique()
+                .HasDatabaseName("IX_Aerolineas_CodigoIata");
+
+            // Índice único en código ICAO
+            entity.HasIndex(e => e.CodigoIcao)
+                .IsUnique()
+                .HasDatabaseName("IX_Aerolineas_CodigoIcao");
+
+            // Índice en nombre para búsquedas
+            entity.HasIndex(e => e.Nombre)
+                .HasDatabaseName("IX_Aerolineas_Nombre");
+
+            // Índice en país para filtrado
+            entity.HasIndex(e => e.Pais)
+                .HasDatabaseName("IX_Aerolineas_Pais");
+
+            // Índice en estado
+            entity.HasIndex(e => e.Estado)
+                .HasDatabaseName("IX_Aerolineas_Estado");
+
+            // Relación con Vuelos (1 aerolínea → muchos vuelos)
+            entity.HasMany(a => a.Vuelos)
+                .WithOne(v => v.Aerolinea)
+                .HasForeignKey(v => v.IdAerolinea)
+                .OnDelete(DeleteBehavior.Restrict);
+        }); 
     }
 }

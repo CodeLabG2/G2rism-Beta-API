@@ -11,6 +11,7 @@ using G2rismBeta.API.DTOs.PreferenciaCliente;
 using G2rismBeta.API.DTOs.Empleado;
 using G2rismBeta.API.DTOs.Proveedor;
 using G2rismBeta.API.DTOs.ContratoProveedor;
+using G2rismBeta.API.DTOs.Aerolinea;
 
 namespace G2rismBeta.API.Mappings;
 
@@ -269,7 +270,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ContratosActivos, opt => opt.Ignore()) // Se calcula en el Service
             .ForMember(dest => dest.TieneContratosVigentes, opt => opt.Ignore()); // Se calcula en el Service
 
-
         // ========================================
         // MAPEOS PARA CONTRATO PROVEEDOR
         // ========================================
@@ -295,5 +295,30 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DiasRestantes, opt => opt.MapFrom(src => src.DiasRestantes))
             .ForMember(dest => dest.ProximoAVencer, opt => opt.MapFrom(src => src.ProximoAVencer))
             .ForMember(dest => dest.DuracionDias, opt => opt.MapFrom(src => src.DuracionDias));
+
+        // ========================================
+        // MAPEOS PARA AEROLINEA
+        // ========================================
+
+        // CreateDto → Modelo (para crear)
+        CreateMap<AerolineaCreateDto, Aerolinea>()
+            .ForMember(dest => dest.IdAerolinea, opt => opt.Ignore())
+            .ForMember(dest => dest.FechaCreacion, opt => opt.Ignore())
+            .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore())
+            .ForMember(dest => dest.Vuelos, opt => opt.Ignore());
+
+        // UpdateDto → Modelo (para actualizar)
+        CreateMap<AerolineaUpdateDto, Aerolinea>()
+            .ForMember(dest => dest.IdAerolinea, opt => opt.Ignore())
+            .ForMember(dest => dest.FechaCreacion, opt => opt.Ignore())
+            .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore())
+            .ForMember(dest => dest.Vuelos, opt => opt.Ignore())
+            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+        // Modelo → ResponseDto (para devolver)
+        CreateMap<Aerolinea, AerolineaResponseDto>()
+            .ForMember(dest => dest.EstaActiva, opt => opt.MapFrom(src => src.EstaActiva))
+            .ForMember(dest => dest.NombreCompleto, opt => opt.MapFrom(src => src.NombreCompleto))
+            .ForMember(dest => dest.TienePoliticasEquipaje, opt => opt.MapFrom(src => src.TienePoliticasEquipaje));
     }
 }
