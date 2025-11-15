@@ -266,7 +266,7 @@ public class CategoriasClienteController : ControllerBase
     /// </remarks>
     /// <response code="200">Estado cambiado exitosamente</response>
     /// <response code="404">Categoría no encontrada</response>
-    [HttpPut("{id}/estado")]
+    [HttpPatch("{id}/estado")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> CambiarEstadoCategoria(int id, [FromQuery] bool estado)
