@@ -30,10 +30,4 @@ public class UsuarioUpdateDto
     /// <example>empleado</example>
     [RegularExpression(@"^(cliente|empleado)$", ErrorMessage = "El tipo de usuario debe ser 'cliente' o 'empleado'")]
     public string? TipoUsuario { get; set; }
-
-    /// <summary>
-    /// Nueva ID de referencia (opcional)
-    /// </summary>
-    /// <example>10</example>
-    public int? IdReferencia { get; set; }
 }

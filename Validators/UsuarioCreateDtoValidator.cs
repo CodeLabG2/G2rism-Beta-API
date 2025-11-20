@@ -69,14 +69,6 @@ public class UsuarioCreateDtoValidator : AbstractValidator<UsuarioCreateDto>
                 .WithMessage("El tipo de usuario debe ser 'cliente' o 'empleado'");
 
         // ========================================
-        // VALIDACIÓN DE ID REFERENCIA
-        // ========================================
-
-        RuleFor(x => x.IdReferencia)
-            .GreaterThan(0).WithMessage("El ID de referencia debe ser mayor a 0")
-            .When(x => x.IdReferencia.HasValue);
-
-        // ========================================
         // VALIDACIÓN DE ROLES IDS
         // ========================================
 

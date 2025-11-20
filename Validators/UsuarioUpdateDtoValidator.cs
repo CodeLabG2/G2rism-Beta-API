@@ -46,14 +46,6 @@ public class UsuarioUpdateDtoValidator : AbstractValidator<UsuarioUpdateDto>
             .When(x => !string.IsNullOrWhiteSpace(x.TipoUsuario));
 
         // ========================================
-        // VALIDACIÓN DE ID REFERENCIA (OPCIONAL)
-        // ========================================
-
-        RuleFor(x => x.IdReferencia)
-            .GreaterThan(0).WithMessage("El ID de referencia debe ser mayor a 0")
-            .When(x => x.IdReferencia.HasValue);
-
-        // ========================================
         // VALIDACIÓN GENERAL
         // ========================================
 
@@ -62,8 +54,7 @@ public class UsuarioUpdateDtoValidator : AbstractValidator<UsuarioUpdateDto>
             .Must(dto =>
                 !string.IsNullOrWhiteSpace(dto.Username) ||
                 !string.IsNullOrWhiteSpace(dto.Email) ||
-                !string.IsNullOrWhiteSpace(dto.TipoUsuario) ||
-                dto.IdReferencia.HasValue
+                !string.IsNullOrWhiteSpace(dto.TipoUsuario)
             )
             .WithMessage("Debe proporcionar al menos un campo para actualizar");
     }

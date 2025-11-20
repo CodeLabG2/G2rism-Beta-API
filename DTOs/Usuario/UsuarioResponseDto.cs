@@ -30,12 +30,6 @@ public class UsuarioResponseDto
     public string TipoUsuario { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID de referencia (cliente o empleado)
-    /// </summary>
-    /// <example>5</example>
-    public int? IdReferencia { get; set; }
-
-    /// <summary>
     /// Fecha y hora del último acceso
     /// </summary>
     /// <example>2025-10-31T10:30:00</example>

@@ -51,14 +51,6 @@ public class UsuarioCreateDto
     public string TipoUsuario { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID de referencia (opcional)
-    /// Si es cliente, apunta a clientes.id_cliente
-    /// Si es empleado, apunta a empleados.id_empleado
-    /// </summary>
-    /// <example>null</example>
-    public int? IdReferencia { get; set; }
-
-    /// <summary>
     /// Lista de IDs de roles a asignar al usuario (opcional)
     /// Si no se proporciona, no se asignarán roles
     /// </summary>

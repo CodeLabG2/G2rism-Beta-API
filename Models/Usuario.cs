@@ -46,20 +46,10 @@ public class Usuario
 
     /// <summary>
     /// Tipo de usuario: 'cliente' o 'empleado'
-    /// Determina a qué tabla de referencia apunta id_referencia
     /// </summary>
     [Required(ErrorMessage = "El tipo de usuario es obligatorio")]
     [Column("tipo_usuario")]
     public string TipoUsuario { get; set; } = "cliente"; // 'cliente' o 'empleado'
-
-    /// <summary>
-    /// ID de referencia a la tabla específica (clientes o empleados)
-    /// Si TipoUsuario = 'cliente' → apunta a clientes.id_cliente
-    /// Si TipoUsuario = 'empleado' → apunta a empleados.id_empleado
-    /// NULL si el usuario aún no está vinculado
-    /// </summary>
-    [Column("id_referencia")]
-    public int? IdReferencia { get; set; }
 
     /// <summary>
     /// Fecha y hora del último acceso al sistema
