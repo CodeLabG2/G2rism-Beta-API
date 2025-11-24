@@ -128,4 +128,14 @@ public interface IUsuarioService
     /// Validar si un email ya existe
     /// </summary>
     Task<bool> ExisteEmailAsync(string email, int? idUsuarioExcluir = null);
+
+    /// <summary>
+    /// Validar si los roles son compatibles con el tipo de usuario
+    /// </summary>
+    Task<(bool esValido, string? mensajeError)> ValidarRolesParaTipoUsuarioAsync(int idUsuario, List<int> rolesIds);
+
+    /// <summary>
+    /// Validar si se puede asignar el rol de Súper Administrador
+    /// </summary>
+    Task<(bool esValido, string? mensajeError)> ValidarAsignacionSuperAdministradorAsync(int idUsuario, List<int> rolesIds);
 }

@@ -32,6 +32,21 @@ public interface IUsuarioRolRepository
     /// </summary>
     Task<UsuarioRol?> GetByUsuarioAndRolAsync(int idUsuario, int idRol);
 
+    /// <summary>
+    /// Verificar si ya existe un usuario con el rol de Súper Administrador (excluyendo un usuario específico)
+    /// </summary>
+    Task<bool> ExisteSuperAdministradorAsync(int? excluirIdUsuario = null);
+
+    /// <summary>
+    /// Contar cuántos usuarios tienen asignado el rol de Súper Administrador
+    /// </summary>
+    Task<int> ContarSuperAdministradoresAsync();
+
+    /// <summary>
+    /// Obtener el ID del usuario que actualmente tiene el rol de Súper Administrador
+    /// </summary>
+    Task<int?> ObtenerIdSuperAdministradorAsync();
+
     // ========================================
     // MÉTODOS DE ASIGNACIÓN
     // ========================================

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using G2rismBeta.API.Data;
 using G2rismBeta.API.Interfaces;
 using G2rismBeta.API.Models;
+using G2rismBeta.API.Constants;
 
 namespace G2rismBeta.API.Repositories;
 
@@ -61,6 +62,44 @@ public class UsuarioRolRepository : IUsuarioRolRepository
             .Include(ur => ur.Rol)
             .Include(ur => ur.Usuario)
             .FirstOrDefaultAsync(ur => ur.IdUsuario == idUsuario && ur.IdRol == idRol);
+    }
+
+    /// <summary>
+    /// Verificar si ya existe un usuario con el rol de Súper Administrador (excluyendo un usuario específico)
+    /// </summary>
+    public async Task<bool> ExisteSuperAdministradorAsync(int? excluirIdUsuario = null)
+    {
+        var query = _context.UsuariosRoles
+            .Where(ur => ur.IdRol == RoleConstants.SUPER_ADMINISTRADOR_ID);
+
+        if (excluirIdUsuario.HasValue)
+        {
+            query = query.Where(ur => ur.IdUsuario != excluirIdUsuario.Value);
+        }
+
+        return await query.AnyAsync();
+    }
+
+    /// <summary>
+    /// Contar cuántos usuarios tienen asignado el rol de Súper Administrador
+    /// </summary>
+    public async Task<int> ContarSuperAdministradoresAsync()
+    {
+        return await _context.UsuariosRoles
+            .Where(ur => ur.IdRol == RoleConstants.SUPER_ADMINISTRADOR_ID)
+            .CountAsync();
+    }
+
+    /// <summary>
+    /// Obtener el ID del usuario que actualmente tiene el rol de Súper Administrador
+    /// </summary>
+    public async Task<int?> ObtenerIdSuperAdministradorAsync()
+    {
+        var usuarioRol = await _context.UsuariosRoles
+            .Where(ur => ur.IdRol == RoleConstants.SUPER_ADMINISTRADOR_ID)
+            .FirstOrDefaultAsync();
+
+        return usuarioRol?.IdUsuario;
     }
 
     // ========================================

@@ -1,6 +1,7 @@
 using G2rismBeta.API.Interfaces;
 using G2rismBeta.API.Models;
 using G2rismBeta.API.Helpers;
+using G2rismBeta.API.Constants;
 
 namespace G2rismBeta.API.Services;
 
@@ -65,9 +66,39 @@ public class UsuarioService : IUsuarioService
         var usuarioCreado = await _usuarioRepository.AddAsync(usuario);
         await _usuarioRepository.SaveChangesAsync();
 
-        // 7. Asignar roles si se proporcionaron
+        // 7. Asignar roles si se proporcionaron (CON VALIDACIONES)
         if (rolesIds != null && rolesIds.Any())
         {
+            // Validar que los roles sean compatibles con el tipo de usuario
+            foreach (var idRol in rolesIds)
+            {
+                if (!RoleConstants.EsRolValidoParaTipoUsuario(idRol, usuarioCreado.TipoUsuario))
+                {
+                    var rolesPermitidos = RoleConstants.GetRolesPermitidos(usuarioCreado.TipoUsuario);
+                    var nombresRolesPermitidos = string.Join(", ", rolesPermitidos.Select(r => ObtenerNombreRol(r)));
+
+                    throw new InvalidOperationException(
+                        $"El usuario de tipo '{usuarioCreado.TipoUsuario}' no puede tener el rol con ID {idRol}. " +
+                        $"Roles permitidos: {nombresRolesPermitidos}");
+                }
+            }
+
+            // Validar restricción de Súper Administrador único
+            if (rolesIds.Contains(RoleConstants.SUPER_ADMINISTRADOR_ID))
+            {
+                var existeSuperAdmin = await _usuarioRolRepository.ExisteSuperAdministradorAsync();
+                if (existeSuperAdmin)
+                {
+                    var idSuperAdminActual = await _usuarioRolRepository.ObtenerIdSuperAdministradorAsync();
+                    var superAdminActual = await _usuarioRepository.GetByIdAsync(idSuperAdminActual!.Value);
+
+                    throw new InvalidOperationException(
+                        $"Ya existe un Súper Administrador en el sistema (Usuario: {superAdminActual?.Username}, ID: {idSuperAdminActual}). " +
+                        $"Solo puede haber un Súper Administrador a la vez.");
+                }
+            }
+
+            // Si todas las validaciones pasan, asignar los roles
             await _usuarioRolRepository.AsignarRolesMultiplesAsync(usuarioCreado.IdUsuario, rolesIds);
         }
 
@@ -274,7 +305,7 @@ public class UsuarioService : IUsuarioService
     // ========================================
 
     /// <summary>
-    /// Asignar roles a un usuario
+    /// Asignar roles a un usuario con validaciones de negocio
     /// </summary>
     public async Task AsignarRolesAsync(int idUsuario, List<int> rolesIds, int? asignadoPor = null)
     {
@@ -284,6 +315,21 @@ public class UsuarioService : IUsuarioService
             throw new KeyNotFoundException($"No se encontró el usuario con ID {idUsuario}");
         }
 
+        // VALIDACIÓN 1: Verificar que los roles sean compatibles con el tipo de usuario
+        var (esValidoTipo, errorTipo) = await ValidarRolesParaTipoUsuarioAsync(idUsuario, rolesIds);
+        if (!esValidoTipo)
+        {
+            throw new InvalidOperationException(errorTipo!);
+        }
+
+        // VALIDACIÓN 2: Verificar restricción de Súper Administrador único
+        var (esValidoSuperAdmin, errorSuperAdmin) = await ValidarAsignacionSuperAdministradorAsync(idUsuario, rolesIds);
+        if (!esValidoSuperAdmin)
+        {
+            throw new InvalidOperationException(errorSuperAdmin!);
+        }
+
+        // Si todas las validaciones pasan, asignar los roles
         await _usuarioRolRepository.ReemplazarRolesAsync(idUsuario, rolesIds, asignadoPor);
     }
 
@@ -362,5 +408,79 @@ public class UsuarioService : IUsuarioService
         }
 
         return await _usuarioRepository.ExistsByEmailAsync(email);
+    }
+
+    /// <summary>
+    /// Validar si los roles son compatibles con el tipo de usuario
+    /// </summary>
+    public async Task<(bool esValido, string? mensajeError)> ValidarRolesParaTipoUsuarioAsync(int idUsuario, List<int> rolesIds)
+    {
+        // Obtener el usuario para verificar su tipo
+        var usuario = await _usuarioRepository.GetByIdAsync(idUsuario);
+        if (usuario == null)
+        {
+            return (false, $"No se encontró el usuario con ID {idUsuario}");
+        }
+
+        // Verificar cada rol contra el tipo de usuario
+        foreach (var idRol in rolesIds)
+        {
+            if (!RoleConstants.EsRolValidoParaTipoUsuario(idRol, usuario.TipoUsuario))
+            {
+                // Construir mensaje de error detallado
+                var rolesPermitidos = RoleConstants.GetRolesPermitidos(usuario.TipoUsuario);
+                var nombresRolesPermitidos = string.Join(", ", rolesPermitidos.Select(r => ObtenerNombreRol(r)));
+
+                return (false,
+                    $"El usuario de tipo '{usuario.TipoUsuario}' no puede tener el rol con ID {idRol}. " +
+                    $"Roles permitidos para usuarios de tipo '{usuario.TipoUsuario}': {nombresRolesPermitidos}");
+            }
+        }
+
+        return (true, null);
+    }
+
+    /// <summary>
+    /// Validar si se puede asignar el rol de Súper Administrador
+    /// </summary>
+    public async Task<(bool esValido, string? mensajeError)> ValidarAsignacionSuperAdministradorAsync(int idUsuario, List<int> rolesIds)
+    {
+        // Verificar si se está intentando asignar el rol de Súper Administrador
+        if (!rolesIds.Contains(RoleConstants.SUPER_ADMINISTRADOR_ID))
+        {
+            // No se está asignando Súper Admin, validación pasa
+            return (true, null);
+        }
+
+        // Verificar si ya existe otro usuario con el rol de Súper Administrador
+        var existeSuperAdmin = await _usuarioRolRepository.ExisteSuperAdministradorAsync(excluirIdUsuario: idUsuario);
+
+        if (existeSuperAdmin)
+        {
+            // Obtener el ID del usuario que actualmente tiene el rol
+            var idSuperAdminActual = await _usuarioRolRepository.ObtenerIdSuperAdministradorAsync();
+            var superAdminActual = await _usuarioRepository.GetByIdAsync(idSuperAdminActual!.Value);
+
+            return (false,
+                $"Ya existe un Súper Administrador en el sistema (Usuario: {superAdminActual?.Username}, ID: {idSuperAdminActual}). " +
+                $"Solo puede haber un Súper Administrador a la vez. Primero debe remover el rol del usuario actual.");
+        }
+
+        return (true, null);
+    }
+
+    /// <summary>
+    /// Método auxiliar para obtener el nombre de un rol por su ID
+    /// </summary>
+    private static string ObtenerNombreRol(int idRol)
+    {
+        return idRol switch
+        {
+            RoleConstants.SUPER_ADMINISTRADOR_ID => RoleConstants.SUPER_ADMINISTRADOR,
+            RoleConstants.ADMINISTRADOR_ID => RoleConstants.ADMINISTRADOR,
+            RoleConstants.EMPLEADO_ID => RoleConstants.EMPLEADO,
+            RoleConstants.CLIENTE_ID => RoleConstants.CLIENTE,
+            _ => $"Rol {idRol}"
+        };
     }
 }
