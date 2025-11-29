@@ -101,7 +101,12 @@ public class Usuario
     public virtual ICollection<UsuarioRol> UsuariosRoles { get; set; } = new List<UsuarioRol>();
 
     /// <summary>
-    /// Tokens de recuperación generados por este usuario
+    /// Tokens de recuperación generados por este usuario (LEGACY)
     /// </summary>
     public virtual ICollection<TokenRecuperacion> TokensRecuperacion { get; set; } = new List<TokenRecuperacion>();
+
+    /// <summary>
+    /// Códigos de recuperación generados por este usuario (6 dígitos)
+    /// </summary>
+    public virtual ICollection<CodigoRecuperacion> CodigosRecuperacion { get; set; } = new List<CodigoRecuperacion>();
 }

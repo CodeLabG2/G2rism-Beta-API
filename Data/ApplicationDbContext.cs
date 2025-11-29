@@ -49,9 +49,15 @@ public class ApplicationDbContext : DbContext
     public DbSet<UsuarioRol> UsuariosRoles { get; set; }
 
     /// <summary>
-    /// Tabla de Tokens de Recuperación
+    /// Tabla de Tokens de Recuperación (LEGACY - Migrar a CodigosRecuperacion)
     /// </summary>
     public DbSet<TokenRecuperacion> TokensRecuperacion { get; set; }
+
+    /// <summary>
+    /// Tabla de Códigos de Recuperación (6 dígitos numéricos)
+    /// Reemplaza a TokensRecuperacion con códigos cortos
+    /// </summary>
+    public DbSet<CodigoRecuperacion> CodigosRecuperacion { get; set; }
 
     /// <summary>
     /// Tabla de Refresh Tokens (JWT)
@@ -231,7 +237,7 @@ public class ApplicationDbContext : DbContext
         });
 
         // ====================================
-        // CONFIGURACIÓN DE LA TABLA TOKENS_RECUPERACION
+        // CONFIGURACIÓN DE LA TABLA TOKENS_RECUPERACION (LEGACY)
         // ====================================
         modelBuilder.Entity<TokenRecuperacion>(entity =>
         {
@@ -254,6 +260,36 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(t => t.IdUsuario)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_token_usuario");
+        });
+
+        // ====================================
+        // CONFIGURACIÓN DE LA TABLA CODIGOS_RECUPERACION
+        // ====================================
+        modelBuilder.Entity<CodigoRecuperacion>(entity =>
+        {
+            // Índice único en código (no puede haber códigos duplicados activos)
+            entity.HasIndex(e => e.Codigo)
+                .IsUnique()
+                .HasDatabaseName("idx_codigo_unique");
+
+            // Índice en id_usuario para consultas rápidas
+            entity.HasIndex(e => e.IdUsuario)
+                .HasDatabaseName("idx_codigo_usuario");
+
+            // Índice en fecha_expiracion para limpiar códigos expirados
+            entity.HasIndex(e => e.FechaExpiracion)
+                .HasDatabaseName("idx_codigo_expiracion");
+
+            // Índice compuesto para códigos activos de un usuario
+            entity.HasIndex(e => new { e.IdUsuario, e.Usado, e.Bloqueado, e.FechaExpiracion })
+                .HasDatabaseName("idx_codigo_usuario_activo");
+
+            // Relación con Usuario
+            entity.HasOne(c => c.Usuario)
+                .WithMany(u => u.CodigosRecuperacion)
+                .HasForeignKey(c => c.IdUsuario)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_codigo_usuario");
         });
 
         // ====================================

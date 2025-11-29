@@ -12,16 +12,16 @@ public class ResetPasswordDtoValidator : AbstractValidator<ResetPasswordDto>
     public ResetPasswordDtoValidator()
     {
         // ========================================
-        // VALIDACIÓN DE TOKEN
+        // VALIDACIÓN DE CÓDIGO DE 6 DÍGITOS
         // ========================================
 
-        RuleFor(x => x.Token)
-            .NotEmpty().WithMessage("El token es obligatorio")
-            .MaximumLength(255).WithMessage("El token no puede exceder 255 caracteres")
-            .Must(token => !string.IsNullOrWhiteSpace(token) && token.Trim() == token)
-                .WithMessage("El token no debe contener espacios")
-            .Must(token => token.Length >= 20)
-                .WithMessage("El token debe tener al menos 20 caracteres");
+        RuleFor(x => x.Codigo)
+            .NotEmpty().WithMessage("El código es obligatorio")
+            .Length(6).WithMessage("El código debe tener exactamente 6 dígitos")
+            .Must(codigo => !string.IsNullOrWhiteSpace(codigo) && codigo.Trim() == codigo)
+                .WithMessage("El código no debe contener espacios")
+            .Must(codigo => codigo.All(char.IsDigit))
+                .WithMessage("El código debe contener solo dígitos numéricos");
 
         // ========================================
         // VALIDACIÓN DE NEW PASSWORD

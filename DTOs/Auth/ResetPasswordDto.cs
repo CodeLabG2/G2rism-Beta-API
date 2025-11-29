@@ -3,17 +3,18 @@ using System.ComponentModel.DataAnnotations;
 namespace G2rismBeta.API.DTOs.Auth;
 
 /// <summary>
-/// DTO para resetear la contraseña usando el token de recuperación
+/// DTO para resetear la contraseña usando el código de recuperación de 6 dígitos
 /// </summary>
 public class ResetPasswordDto
 {
     /// <summary>
-    /// Token de recuperación recibido por email
+    /// Código de recuperación de 6 dígitos recibido por email
     /// </summary>
-    /// <example>a1b2c3d4e5f6g7h8i9j0</example>
-    [Required(ErrorMessage = "El token es obligatorio")]
-    [StringLength(255, ErrorMessage = "El token no puede exceder 255 caracteres")]
-    public string Token { get; set; } = string.Empty;
+    /// <example>123456</example>
+    [Required(ErrorMessage = "El código es obligatorio")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "El código debe tener exactamente 6 dígitos")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "El código debe contener exactamente 6 dígitos numéricos")]
+    public string Codigo { get; set; } = string.Empty;
 
     /// <summary>
     /// Nueva contraseña

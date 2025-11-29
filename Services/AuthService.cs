@@ -13,6 +13,7 @@ public class AuthService : IAuthService
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IUsuarioRolRepository _usuarioRolRepository;
     private readonly ITokenRecuperacionRepository _tokenRepository;
+    private readonly ICodigoRecuperacionRepository _codigoRepository;
     private readonly IRolRepository _rolRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly JwtTokenGenerator _jwtTokenGenerator;
@@ -22,11 +23,13 @@ public class AuthService : IAuthService
     // Configuración de seguridad
     private const int MAX_INTENTOS_FALLIDOS = 5;
     private const int HORAS_EXPIRACION_TOKEN = 1;
+    private const int MAX_INTENTOS_CODIGO = 5;
 
     public AuthService(
         IUsuarioRepository usuarioRepository,
         IUsuarioRolRepository usuarioRolRepository,
         ITokenRecuperacionRepository tokenRepository,
+        ICodigoRecuperacionRepository codigoRepository,
         IRolRepository rolRepository,
         IRefreshTokenRepository refreshTokenRepository,
         JwtTokenGenerator jwtTokenGenerator,
@@ -36,6 +39,7 @@ public class AuthService : IAuthService
         _usuarioRepository = usuarioRepository;
         _usuarioRolRepository = usuarioRolRepository;
         _tokenRepository = tokenRepository;
+        _codigoRepository = codigoRepository;
         _rolRepository = rolRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _jwtTokenGenerator = jwtTokenGenerator;
@@ -339,7 +343,7 @@ public class AuthService : IAuthService
     // ========================================
 
     /// <summary>
-    /// Solicitar recuperación de contraseña
+    /// Solicitar recuperación de contraseña (con código de 6 dígitos)
     /// </summary>
     /// <param name="email">Email del usuario</param>
     /// <param name="frontendUrl">URL del frontend para construir el link de recuperación</param>
@@ -356,93 +360,115 @@ public class AuthService : IAuthService
             throw new KeyNotFoundException("Si el email existe, se enviará un correo de recuperación");
         }
 
-        // 2. Invalidar tokens activos anteriores
-        await _tokenRepository.InvalidarTokensActivosAsync(usuario.IdUsuario);
+        // 2. Invalidar códigos activos anteriores
+        await _codigoRepository.InvalidarCodigosActivosAsync(usuario.IdUsuario);
 
-        // 3. Generar un nuevo token
-        var token = TokenGenerator.GenerateToken();
-        var tokenRecuperacion = new TokenRecuperacion
+        // 3. Generar un nuevo código de 6 dígitos
+        var codigo = TokenGenerator.GenerateNumericCode(6);
+        var codigoRecuperacion = new CodigoRecuperacion
         {
             IdUsuario = usuario.IdUsuario,
-            Token = token,
-            TipoToken = "recuperacion_password",
+            Codigo = codigo,
+            TipoCodigo = "recuperacion_password",
             FechaGeneracion = DateTime.Now,
             FechaExpiracion = DateTime.Now.AddHours(HORAS_EXPIRACION_TOKEN),
             Usado = false,
+            Bloqueado = false,
+            IntentosValidacion = 0,
             IpSolicitud = ipSolicitud
         };
 
-        await _tokenRepository.CrearTokenAsync(tokenRecuperacion);
+        await _codigoRepository.CrearCodigoAsync(codigoRecuperacion);
 
-        // 4. Enviar email con el token de recuperación
-        await _emailService.SendPasswordResetEmailAsync(usuario.Email, usuario.Username, token, frontendUrl);
+        // 4. Enviar email con el código de recuperación
+        await _emailService.SendPasswordResetEmailAsync(usuario.Email, usuario.Username, codigo, frontendUrl);
 
-        return token;
+        return codigo;
     }
 
     /// <summary>
-    /// Validar un token de recuperación
+    /// Validar un código de recuperación
     /// </summary>
-    public async Task<bool> ValidarTokenRecuperacionAsync(string token)
+    public async Task<bool> ValidarTokenRecuperacionAsync(string codigo)
     {
-        return await _tokenRepository.ValidarTokenAsync(token);
+        return await _codigoRepository.ValidarCodigoAsync(codigo);
     }
 
     /// <summary>
-    /// Restablecer contraseña con token
+    /// Restablecer contraseña con código de 6 dígitos
+    /// Incluye validación de intentos y bloqueo automático
     /// </summary>
-    /// <param name="token">Token de recuperación</param>
+    /// <param name="codigo">Código de recuperación de 6 dígitos</param>
     /// <param name="nuevaPassword">Nueva contraseña</param>
     /// <param name="ipAddress">IP desde donde se realiza el cambio (opcional, para auditoría)</param>
-    public async Task<bool> RestablecerPasswordAsync(string token, string nuevaPassword, string? ipAddress = null)
+    public async Task<bool> RestablecerPasswordAsync(string codigo, string nuevaPassword, string? ipAddress = null)
     {
-        // 1. Validar el token
-        var esValido = await _tokenRepository.ValidarTokenAsync(token);
-        if (!esValido)
+        // 1. Validar formato del código (debe ser exactamente 6 dígitos)
+        if (codigo.Length != 6 || !codigo.All(char.IsDigit))
         {
-            throw new InvalidOperationException("El token es inválido o ha expirado");
+            throw new ArgumentException("El código debe tener exactamente 6 dígitos numéricos");
         }
 
-        // 2. Obtener el token con el usuario
-        var tokenObj = await _tokenRepository.GetByTokenAsync(token);
-        if (tokenObj == null)
+        // 2. Obtener el código de recuperación
+        var codigoObj = await _codigoRepository.GetByCodigoAsync(codigo);
+        if (codigoObj == null)
         {
-            throw new KeyNotFoundException("Token no encontrado");
+            throw new KeyNotFoundException("Código no encontrado");
         }
 
-        // 3. Validar fortaleza de la nueva contraseña
+        // 3. Verificar si está bloqueado
+        if (codigoObj.Bloqueado)
+        {
+            throw new InvalidOperationException($"El código ha sido bloqueado por exceso de intentos fallidos. Solicita un nuevo código.");
+        }
+
+        // 4. Verificar si está expirado
+        if (codigoObj.HaExpirado)
+        {
+            throw new InvalidOperationException("El código ha expirado. Solicita un nuevo código.");
+        }
+
+        // 5. Verificar si ya fue usado
+        if (codigoObj.Usado)
+        {
+            throw new InvalidOperationException("El código ya ha sido utilizado. Solicita un nuevo código.");
+        }
+
+        // 6. Validar fortaleza de la nueva contraseña
         var (esValidaPassword, errorPassword) = PasswordHasher.ValidatePasswordStrength(nuevaPassword);
         if (!esValidaPassword)
         {
+            // Incrementar intentos incluso si la contraseña no es válida
+            await _codigoRepository.IncrementarIntentosAsync(codigo);
             throw new ArgumentException(errorPassword ?? "La contraseña no cumple los requisitos");
         }
 
-        // 4. Obtener el usuario
-        var usuario = await _usuarioRepository.GetByIdAsync(tokenObj.IdUsuario);
+        // 7. Obtener el usuario
+        var usuario = await _usuarioRepository.GetByIdAsync(codigoObj.IdUsuario);
         if (usuario == null)
         {
             throw new KeyNotFoundException("Usuario no encontrado");
         }
 
-        // 5. Actualizar la contraseña
+        // 8. Actualizar la contraseña
         usuario.PasswordHash = PasswordHasher.HashPassword(nuevaPassword);
         usuario.FechaModificacion = DateTime.Now;
 
-        // Desbloquear y resetear intentos
+        // Desbloquear y resetear intentos de login
         usuario.Bloqueado = false;
         usuario.IntentosFallidos = 0;
 
         // 📊 AUDITORÍA: Registrar la IP para trazabilidad
-        Console.WriteLine($"🔐 Contraseña restablecida via token | Usuario: {usuario.Username} (ID: {usuario.IdUsuario}) | IP: {ipAddress ?? "No registrada"}");
+        Console.WriteLine($"🔐 Contraseña restablecida con código | Usuario: {usuario.Username} (ID: {usuario.IdUsuario}) | IP: {ipAddress ?? "No registrada"}");
 
         await _usuarioRepository.UpdateAsync(usuario);
         await _usuarioRepository.SaveChangesAsync();
 
-        // 6. Marcar el token como usado
-        await _tokenRepository.MarcarComoUsadoAsync(token);
+        // 9. Marcar el código como usado
+        await _codigoRepository.MarcarComoUsadoAsync(codigo);
 
-        // 7. Invalidar otros tokens activos
-        await _tokenRepository.InvalidarTokensActivosAsync(usuario.IdUsuario);
+        // 10. Invalidar otros códigos activos del usuario
+        await _codigoRepository.InvalidarCodigosActivosAsync(usuario.IdUsuario);
 
         return true;
     }

@@ -39,13 +39,13 @@ public class SendGridEmailService : IEmailService
     }
 
     /// <summary>
-    /// Enviar email de recuperación de contraseña
+    /// Enviar email de recuperación de contraseña con código de 6 dígitos
     /// </summary>
-    public async Task<bool> SendPasswordResetEmailAsync(string email, string username, string token, string? resetLink = null)
+    public async Task<bool> SendPasswordResetEmailAsync(string email, string username, string codigo, string? resetLink = null)
     {
-        _logger.LogInformation("📧 Enviando email de recuperación de contraseña a: {Email}", email);
+        _logger.LogInformation("📧 Enviando email de recuperación de contraseña a: {Email} | Código: {Codigo}", email, codigo);
 
-        var subject = "Recuperación de Contraseña - G2rism Beta";
+        var subject = "Código de Recuperación de Contraseña - G2rism Beta";
 
         var htmlContent = $@"
 <!DOCTYPE html>
@@ -68,24 +68,34 @@ public class SendGridEmailService : IEmailService
 
         <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en G2rism Beta.</p>
 
-        <div style='background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;'>
-            <p style='margin: 0 0 10px 0;'><strong>Tu token de recuperación es:</strong></p>
-            <p style='font-size: 24px; font-weight: bold; color: #667eea; letter-spacing: 2px; margin: 0;'>{token}</p>
+        <div style='background: white; padding: 25px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0; text-align: center;'>
+            <p style='margin: 0 0 15px 0; font-size: 14px; color: #666;'><strong>Tu código de recuperación es:</strong></p>
+            <div style='background: #f0f4ff; padding: 20px; border-radius: 8px; display: inline-block;'>
+                <p style='font-size: 48px; font-weight: bold; color: #667eea; letter-spacing: 8px; margin: 0; font-family: monospace;'>{codigo}</p>
+            </div>
+            <p style='margin: 15px 0 0 0; font-size: 12px; color: #999;'>Código de 6 dígitos</p>
         </div>
 
         {(string.IsNullOrEmpty(resetLink) ? "" : $@"
-        <p>O puedes hacer clic en el siguiente enlace:</p>
+        <p>O puedes hacer clic en el siguiente enlace para restablecer tu contraseña:</p>
         <div style='text-align: center; margin: 30px 0;'>
             <a href='{resetLink}' style='background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;'>Restablecer Contraseña</a>
         </div>
         ")}
 
-        <p><strong>Por seguridad:</strong></p>
-        <ul>
-            <li>Este token expira en <strong>1 hora</strong></li>
+        <p><strong>⚠️ Medidas de seguridad:</strong></p>
+        <ul style='background: #fff3cd; padding: 15px 15px 15px 35px; border-radius: 5px; border-left: 4px solid #ffc107;'>
+            <li>Este código expira en <strong>1 hora</strong></li>
             <li>Solo se puede usar <strong>una vez</strong></li>
-            <li>Si no solicitaste este cambio, ignora este email</li>
+            <li>Máximo <strong>5 intentos</strong> de validación</li>
+            <li>Si no solicitaste este cambio, <strong>ignora este email</strong></li>
         </ul>
+
+        <div style='background: #e7f3ff; padding: 15px; border-radius: 5px; border-left: 4px solid #2196F3; margin: 20px 0;'>
+            <p style='margin: 0; font-size: 13px; color: #555;'>
+                💡 <strong>Tip:</strong> Copia el código exactamente como se muestra arriba (6 dígitos).
+            </p>
+        </div>
 
         <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
 
@@ -104,17 +114,27 @@ Hola {username},
 
 Recibimos una solicitud para restablecer la contraseña de tu cuenta.
 
-Tu token de recuperación es: {token}
+═══════════════════════════════
+   TU CÓDIGO DE RECUPERACIÓN
+═══════════════════════════════
 
-{(string.IsNullOrEmpty(resetLink) ? "" : $"O puedes acceder a: {resetLink}")}
+        {codigo}
 
-Por seguridad:
-- Este token expira en 1 hora
-- Solo se puede usar una vez
-- Si no solicitaste este cambio, ignora este email
+═══════════════════════════════
+
+{(string.IsNullOrEmpty(resetLink) ? "" : $"O puedes acceder a: {resetLink}\n")}
+
+MEDIDAS DE SEGURIDAD:
+• Este código expira en 1 hora
+• Solo se puede usar una vez
+• Máximo 5 intentos de validación
+• Si no solicitaste este cambio, ignora este email
+
+TIP: Copia el código exactamente como se muestra (6 dígitos).
 
 ---
 Este es un email automático, por favor no respondas a este mensaje.
+Si tienes problemas, contacta a soporte técnico.
 ";
 
         return await SendEmailAsync(email, subject, htmlContent, plainTextContent);

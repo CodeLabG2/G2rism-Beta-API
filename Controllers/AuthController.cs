@@ -413,17 +413,17 @@ public class AuthController : ControllerBase
     }
 
     // ========================================
-    // ENDPOINT 5: RESET PASSWORD (CON TOKEN)
+    // ENDPOINT 5: RESET PASSWORD (CON CÓDIGO DE 6 DÍGITOS)
     // ========================================
 
     /// <summary>
-    /// Restablecer contraseña usando token de recuperación
-    /// Endpoint público - no requiere autenticación (usa token de recuperación)
+    /// Restablecer contraseña usando código de recuperación de 6 dígitos
+    /// Endpoint público - no requiere autenticación (usa código de recuperación)
     /// </summary>
-    /// <param name="dto">Token y nueva contraseña</param>
+    /// <param name="dto">Código de 6 dígitos y nueva contraseña</param>
     /// <returns>Confirmación de cambio de contraseña</returns>
     /// <response code="200">Contraseña cambiada exitosamente</response>
-    /// <response code="400">Token inválido o contraseña débil</response>
+    /// <response code="400">Código inválido o contraseña débil</response>
     /// <response code="429">Límite de solicitudes excedido</response>
     /// <response code="500">Error interno del servidor</response>
     [HttpPost("reset-password")]
@@ -436,12 +436,12 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<ApiResponse<object>>> ResetPassword(
         [FromBody] ResetPasswordDto dto)
     {
-        _logger.LogInformation("🔐 Restableciendo contraseña con token");
+        _logger.LogInformation("🔐 Restableciendo contraseña con código: {Codigo}", dto.Codigo);
 
         try
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var resultado = await _authService.RestablecerPasswordAsync(dto.Token, dto.NewPassword, ipAddress);
+            var resultado = await _authService.RestablecerPasswordAsync(dto.Codigo, dto.NewPassword, ipAddress);
 
             if (!resultado)
             {

@@ -58,7 +58,8 @@ builder.Services.AddScoped<IRolPermisoRepository, RolPermisoRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IRolRepository, RolRepository>();
 builder.Services.AddScoped<IUsuarioRolRepository, UsuarioRolRepository>();
-builder.Services.AddScoped<ITokenRecuperacionRepository, TokenRecuperacionRepository>();
+builder.Services.AddScoped<ITokenRecuperacionRepository, TokenRecuperacionRepository>(); // LEGACY
+builder.Services.AddScoped<ICodigoRecuperacionRepository, CodigoRecuperacionRepository>(); // Códigos de 6 dígitos
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 // ========================================
