@@ -97,6 +97,7 @@ namespace G2rismBeta.API.Services
             proveedor.FechaRegistro = DateTime.Now;
 
             var proveedorCreado = await _proveedorRepository.AddAsync(proveedor);
+            await _proveedorRepository.SaveChangesAsync();
 
             _logger.LogInformation($"Proveedor creado exitosamente: {proveedorCreado.NombreEmpresa} (ID: {proveedorCreado.IdProveedor})");
 
@@ -191,6 +192,7 @@ namespace G2rismBeta.API.Services
                 proveedorExistente.Observaciones = dto.Observaciones;
 
             await _proveedorRepository.UpdateAsync(proveedorExistente);
+            await _proveedorRepository.SaveChangesAsync();
 
             _logger.LogInformation($"Proveedor actualizado exitosamente: ID {id}");
 
@@ -224,6 +226,7 @@ namespace G2rismBeta.API.Services
             }
 
             await _proveedorRepository.DeleteAsync(id);
+            await _proveedorRepository.SaveChangesAsync();
 
             _logger.LogInformation($"Proveedor eliminado exitosamente: ID {id}");
 
@@ -272,17 +275,23 @@ namespace G2rismBeta.API.Services
         }
 
         /// <summary>
-        /// Obtener proveedores por tipo
+        /// Obtener proveedores por tipo (case-insensitive)
         /// </summary>
         public async Task<IEnumerable<ProveedorResponseDto>> GetByTipoAsync(string tipo)
         {
             var tiposValidos = new[] { "Hotel", "Aerolinea", "Transporte", "Servicios", "Mixto" };
-            if (!tiposValidos.Contains(tipo))
+
+            // Normalizar el tipo a formato capitalizado (primera letra mayúscula)
+            var tipoNormalizado = string.IsNullOrWhiteSpace(tipo)
+                ? string.Empty
+                : char.ToUpper(tipo[0]) + tipo.Substring(1).ToLower();
+
+            if (!tiposValidos.Contains(tipoNormalizado))
             {
                 throw new ArgumentException($"Tipo '{tipo}' no es válido. Valores permitidos: {string.Join(", ", tiposValidos)}");
             }
 
-            var proveedores = await _proveedorRepository.GetByTipoAsync(tipo);
+            var proveedores = await _proveedorRepository.GetByTipoAsync(tipoNormalizado);
             return _mapper.Map<IEnumerable<ProveedorResponseDto>>(proveedores);
         }
 
@@ -361,6 +370,7 @@ namespace G2rismBeta.API.Services
 
             proveedor.Estado = nuevoEstado;
             await _proveedorRepository.UpdateAsync(proveedor);
+            await _proveedorRepository.SaveChangesAsync();
 
             _logger.LogInformation($"Estado del proveedor ID {id} cambiado a: {nuevoEstado}");
 
@@ -385,6 +395,7 @@ namespace G2rismBeta.API.Services
 
             proveedor.Calificacion = nuevaCalificacion;
             await _proveedorRepository.UpdateAsync(proveedor);
+            await _proveedorRepository.SaveChangesAsync();
 
             _logger.LogInformation($"Calificación del proveedor ID {id} actualizada a: {nuevaCalificacion}");
 

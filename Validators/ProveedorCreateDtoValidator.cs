@@ -7,16 +7,13 @@ namespace G2rismBeta.API.Validators
 {
     /// <summary>
     /// Validador para la creación de proveedores
-    /// Implementa validaciones sincrónicas y asincrónicas
+    /// Implementa validaciones de formato y estructura (sincrónicas)
+    /// Las validaciones de negocio (como unicidad) se realizan en el Service Layer
     /// </summary>
     public class ProveedorCreateDtoValidator : AbstractValidator<ProveedorCreateDto>
     {
-        private readonly IProveedorRepository _proveedorRepository;
-
-        public ProveedorCreateDtoValidator(IProveedorRepository proveedorRepository)
+        public ProveedorCreateDtoValidator()
         {
-            _proveedorRepository = proveedorRepository;
-
             // ========================================
             // VALIDACIONES DE NOMBRE DE EMPRESA
             // ========================================
@@ -85,16 +82,12 @@ namespace G2rismBeta.API.Validators
             // ========================================
             // VALIDACIONES DE NIT/RUT
             // ========================================
+            // NOTA: La validación de unicidad se realiza en el Service Layer
             RuleFor(x => x.NitRut)
                 .NotEmpty().WithMessage("El NIT/RUT es obligatorio")
                 .Length(5, 20).WithMessage("El NIT/RUT debe tener entre 5 y 20 caracteres")
                 .Matches(@"^[\d\-]+$")
-                .WithMessage("El NIT/RUT solo debe contener números y guiones")
-                .MustAsync(async (nitRut, cancellation) =>
-                {
-                    return !await _proveedorRepository.ExisteNitRutAsync(nitRut);
-                })
-                .WithMessage("Ya existe un proveedor con este NIT/RUT");
+                .WithMessage("El NIT/RUT solo debe contener números y guiones");
 
             // ========================================
             // VALIDACIONES DE TIPO DE PROVEEDOR

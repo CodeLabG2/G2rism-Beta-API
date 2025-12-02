@@ -44,12 +44,12 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedores = await _proveedorService.GetAllAsync();
-                return Ok((proveedores, "Proveedores obtenidos exitosamente"));
+                return Ok(ApiResponse<IEnumerable<ProveedorResponseDto>>.SuccessResponse(proveedores, "Proveedores obtenidos exitosamente"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener todos los proveedores");
-                return StatusCode(500, ("Error al obtener los proveedores", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener los proveedores", error = ex.Message });
             }
         }
 
@@ -73,15 +73,15 @@ namespace G2rismBeta.API.Controllers
 
                 if (proveedor == null)
                 {
-                    return NotFound(("Proveedor no encontrado", $"No existe un proveedor con ID {id}"));
+                    return NotFound(new { message = "Proveedor no encontrado", details = $"No existe un proveedor con ID {id}" });
                 }
 
-                return Ok((proveedor, "Proveedor obtenido exitosamente"));
+                return Ok(ApiResponse<ProveedorResponseDto>.SuccessResponse(proveedor, "Proveedor obtenido exitosamente"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener proveedor con ID {id}");
-                return StatusCode(500, ("Error al obtener el proveedor", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener el proveedor", error = ex.Message });
             }
         }
 
@@ -105,20 +105,20 @@ namespace G2rismBeta.API.Controllers
                 return CreatedAtAction(
                     nameof(GetById),
                     new { id = proveedorCreado.IdProveedor },
-                    (proveedorCreado, "Proveedor creado exitosamente"));
+                    ApiResponse<ProveedorResponseDto>.SuccessResponse(proveedorCreado, "Proveedor creado exitosamente"));
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(("Error de validación", ex.Message));
+                return BadRequest(new { message = "Error de validación", error = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Datos inválidos", ex.Message));
+                return BadRequest(new { message = "Datos inválidos", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear proveedor");
-                return StatusCode(500, ("Error al crear el proveedor", ex.Message));
+                return StatusCode(500, new { message = "Error al crear el proveedor", error = ex.Message });
             }
         }
 
@@ -142,24 +142,24 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedorActualizado = await _proveedorService.UpdateAsync(id, dto);
-                return Ok((proveedorActualizado, "Proveedor actualizado exitosamente"));
+                return Ok(ApiResponse<ProveedorResponseDto>.SuccessResponse(proveedorActualizado, "Proveedor actualizado exitosamente"));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(("Proveedor no encontrado", ex.Message));
+                return NotFound(new { message = "Proveedor no encontrado", error = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(("Error de validación", ex.Message));
+                return BadRequest(new { message = "Error de validación", error = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Datos inválidos", ex.Message));
+                return BadRequest(new { message = "Datos inválidos", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al actualizar proveedor con ID {id}");
-                return StatusCode(500, ("Error al actualizar el proveedor", ex.Message));
+                return StatusCode(500, new { message = "Error al actualizar el proveedor", error = ex.Message });
             }
         }
 
@@ -182,20 +182,20 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 await _proveedorService.DeleteAsync(id);
-                return Ok((true, "Proveedor eliminado exitosamente"));
+                return Ok(ApiResponse<bool>.SuccessResponse(true, "Proveedor eliminado exitosamente"));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(("Proveedor no encontrado", ex.Message));
+                return NotFound(new { message = "Proveedor no encontrado", error = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(("No se puede eliminar el proveedor", ex.Message));
+                return BadRequest(new { message = "No se puede eliminar el proveedor", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al eliminar proveedor con ID {id}");
-                return StatusCode(500, ("Error al eliminar el proveedor", ex.Message));
+                return StatusCode(500, new { message = "Error al eliminar el proveedor", error = ex.Message });
             }
         }
 
@@ -223,15 +223,15 @@ namespace G2rismBeta.API.Controllers
 
                 if (proveedor == null)
                 {
-                    return NotFound(("Proveedor no encontrado", $"No existe un proveedor con NIT/RUT {nitRut}"));
+                    return NotFound(new { message = "Proveedor no encontrado", details = $"No existe un proveedor con NIT/RUT {nitRut}" });
                 }
 
-                return Ok((proveedor, "Proveedor encontrado"));
+                return Ok(ApiResponse<ProveedorResponseDto>.SuccessResponse(proveedor, "Proveedor encontrado"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al buscar proveedor por NIT/RUT {nitRut}");
-                return StatusCode(500, ("Error al buscar el proveedor", ex.Message));
+                return StatusCode(500, new { message = "Error al buscar el proveedor", error = ex.Message });
             }
         }
 
@@ -252,16 +252,16 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedores = await _proveedorService.SearchByNombreAsync(nombre);
-                return Ok((proveedores, "Búsqueda realizada exitosamente"));
+                return Ok(ApiResponse<IEnumerable<ProveedorResponseDto>>.SuccessResponse(proveedores, "Búsqueda realizada exitosamente"));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Parámetro inválido", ex.Message));
+                return BadRequest(new { message = "Parámetro inválido", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al buscar proveedores por nombre: {nombre}");
-                return StatusCode(500, ("Error al realizar la búsqueda", ex.Message));
+                return StatusCode(500, new { message = "Error al realizar la búsqueda", error = ex.Message });
             }
         }
 
@@ -282,16 +282,16 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedores = await _proveedorService.GetByTipoAsync(tipo);
-                return Ok((proveedores, $"Proveedores de tipo '{tipo}' obtenidos exitosamente"));
+                return Ok(ApiResponse<IEnumerable<ProveedorResponseDto>>.SuccessResponse(proveedores, $"Proveedores de tipo '{tipo}' obtenidos exitosamente"));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Tipo inválido", ex.Message));
+                return BadRequest(new { message = "Tipo inválido", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener proveedores por tipo: {tipo}");
-                return StatusCode(500, ("Error al obtener los proveedores", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener los proveedores", error = ex.Message });
             }
         }
 
@@ -309,12 +309,12 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedores = await _proveedorService.GetActivosAsync();
-                return Ok((proveedores, "Proveedores activos obtenidos exitosamente"));
+                return Ok(ApiResponse<IEnumerable<ProveedorResponseDto>>.SuccessResponse(proveedores, "Proveedores activos obtenidos exitosamente"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener proveedores activos");
-                return StatusCode(500, ("Error al obtener los proveedores", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener los proveedores", error = ex.Message });
             }
         }
 
@@ -335,16 +335,16 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedores = await _proveedorService.GetByCiudadAsync(ciudad);
-                return Ok((proveedores, $"Proveedores de {ciudad} obtenidos exitosamente"));
+                return Ok(ApiResponse<IEnumerable<ProveedorResponseDto>>.SuccessResponse(proveedores, $"Proveedores de {ciudad} obtenidos exitosamente"));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Parámetro inválido", ex.Message));
+                return BadRequest(new { message = "Parámetro inválido", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener proveedores por ciudad: {ciudad}");
-                return StatusCode(500, ("Error al obtener los proveedores", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener los proveedores", error = ex.Message });
             }
         }
 
@@ -365,16 +365,16 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedores = await _proveedorService.GetByCalificacionMinimaAsync(calificacion);
-                return Ok((proveedores, $"Proveedores con calificación ≥ {calificacion} obtenidos exitosamente"));
+                return Ok(ApiResponse<IEnumerable<ProveedorResponseDto>>.SuccessResponse(proveedores, $"Proveedores con calificación ≥ {calificacion} obtenidos exitosamente"));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Calificación inválida", ex.Message));
+                return BadRequest(new { message = "Calificación inválida", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener proveedores por calificación: {calificacion}");
-                return StatusCode(500, ("Error al obtener los proveedores", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener los proveedores", error = ex.Message });
             }
         }
 
@@ -402,24 +402,24 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedor = await _proveedorService.CambiarEstadoAsync(id, nuevoEstado);
-                return Ok((proveedor, $"Estado cambiado a '{nuevoEstado}' exitosamente"));
+                return Ok(ApiResponse<ProveedorResponseDto>.SuccessResponse(proveedor, $"Estado cambiado a '{nuevoEstado}' exitosamente"));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(("Proveedor no encontrado", ex.Message));
+                return NotFound(new { message = "Proveedor no encontrado", error = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(("No se puede cambiar el estado", ex.Message));
+                return BadRequest(new { message = "No se puede cambiar el estado", error = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Estado inválido", ex.Message));
+                return BadRequest(new { message = "Estado inválido", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al cambiar estado del proveedor ID {id}");
-                return StatusCode(500, ("Error al cambiar el estado", ex.Message));
+                return StatusCode(500, new { message = "Error al cambiar el estado", error = ex.Message });
             }
         }
 
@@ -443,20 +443,20 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedor = await _proveedorService.ActualizarCalificacionAsync(id, nuevaCalificacion);
-                return Ok((proveedor, $"Calificación actualizada a {nuevaCalificacion} exitosamente"));
+                return Ok(ApiResponse<ProveedorResponseDto>.SuccessResponse(proveedor, $"Calificación actualizada a {nuevaCalificacion} exitosamente"));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(("Proveedor no encontrado", ex.Message));
+                return NotFound(new { message = "Proveedor no encontrado", error = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Calificación inválida", ex.Message));
+                return BadRequest(new { message = "Calificación inválida", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al actualizar calificación del proveedor ID {id}");
-                return StatusCode(500, ("Error al actualizar la calificación", ex.Message));
+                return StatusCode(500, new { message = "Error al actualizar la calificación", error = ex.Message });
             }
         }
 
@@ -481,16 +481,16 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedores = await _proveedorService.GetTopProveedoresAsync(cantidad);
-                return Ok((proveedores, $"Top {cantidad} proveedores obtenidos exitosamente"));
+                return Ok(ApiResponse<IEnumerable<ProveedorResponseDto>>.SuccessResponse(proveedores, $"Top {cantidad} proveedores obtenidos exitosamente"));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(("Cantidad inválida", ex.Message));
+                return BadRequest(new { message = "Cantidad inválida", error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener top {cantidad} proveedores");
-                return StatusCode(500, ("Error al obtener los proveedores", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener los proveedores", error = ex.Message });
             }
         }
 
@@ -508,12 +508,12 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var estadisticas = await _proveedorService.GetEstadisticasPorTipoAsync();
-                return Ok((estadisticas, "Estadísticas obtenidas exitosamente"));
+                return Ok(ApiResponse<Dictionary<string, int>>.SuccessResponse(estadisticas, "Estadísticas obtenidas exitosamente"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener estadísticas por tipo");
-                return StatusCode(500, ("Error al obtener las estadísticas", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener las estadísticas", error = ex.Message });
             }
         }
 
@@ -531,12 +531,12 @@ namespace G2rismBeta.API.Controllers
             try
             {
                 var proveedores = await _proveedorService.GetConContratosVigentesAsync();
-                return Ok((proveedores, "Proveedores con contratos vigentes obtenidos exitosamente"));
+                return Ok(ApiResponse<IEnumerable<ProveedorResponseDto>>.SuccessResponse(proveedores, "Proveedores con contratos vigentes obtenidos exitosamente"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener proveedores con contratos vigentes");
-                return StatusCode(500, ("Error al obtener los proveedores", ex.Message));
+                return StatusCode(500, new { message = "Error al obtener los proveedores", error = ex.Message });
             }
         }
     }
