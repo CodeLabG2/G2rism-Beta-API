@@ -219,7 +219,24 @@ public class ClientesController : ControllerBase
         try
         {
             var clientes = await _clienteService.BuscarClientesPorNombreAsync(termino);
-            return Ok(clientes);
+            var clientesList = clientes.ToList();
+
+            if (!clientesList.Any())
+            {
+                return Ok(new
+                {
+                    message = $"No se encontraron clientes que coincidan con '{termino}'",
+                    data = clientesList,
+                    count = 0
+                });
+            }
+
+            return Ok(new
+            {
+                message = $"Se encontraron {clientesList.Count} cliente(s)",
+                data = clientesList,
+                count = clientesList.Count
+            });
         }
         catch (ArgumentException ex)
         {
@@ -245,7 +262,24 @@ public class ClientesController : ControllerBase
         try
         {
             var clientes = await _clienteService.GetClientesPorCategoriaAsync(idCategoria);
-            return Ok(clientes);
+            var clientesList = clientes.ToList();
+
+            if (!clientesList.Any())
+            {
+                return Ok(new
+                {
+                    message = $"No hay clientes registrados en la categoría con ID {idCategoria}",
+                    data = clientesList,
+                    count = 0
+                });
+            }
+
+            return Ok(new
+            {
+                message = $"Se encontraron {clientesList.Count} cliente(s) en la categoría",
+                data = clientesList,
+                count = clientesList.Count
+            });
         }
         catch (KeyNotFoundException ex)
         {
@@ -269,7 +303,24 @@ public class ClientesController : ControllerBase
         try
         {
             var clientes = await _clienteService.GetClientesPorCiudadAsync(ciudad);
-            return Ok(clientes);
+            var clientesList = clientes.ToList();
+
+            if (!clientesList.Any())
+            {
+                return Ok(new
+                {
+                    message = $"No se encontraron clientes en la ciudad '{ciudad}'",
+                    data = clientesList,
+                    count = 0
+                });
+            }
+
+            return Ok(new
+            {
+                message = $"Se encontraron {clientesList.Count} cliente(s) en {ciudad}",
+                data = clientesList,
+                count = clientesList.Count
+            });
         }
         catch (ArgumentException ex)
         {
@@ -293,7 +344,24 @@ public class ClientesController : ControllerBase
         try
         {
             var clientes = await _clienteService.GetClientesPorPaisAsync(pais);
-            return Ok(clientes);
+            var clientesList = clientes.ToList();
+
+            if (!clientesList.Any())
+            {
+                return Ok(new
+                {
+                    message = $"No se encontraron clientes en el país '{pais}'",
+                    data = clientesList,
+                    count = 0
+                });
+            }
+
+            return Ok(new
+            {
+                message = $"Se encontraron {clientesList.Count} cliente(s) en {pais}",
+                data = clientesList,
+                count = clientesList.Count
+            });
         }
         catch (ArgumentException ex)
         {
