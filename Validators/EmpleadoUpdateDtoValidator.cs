@@ -1,25 +1,18 @@
 using FluentValidation;
 using G2rismBeta.API.DTOs.Empleado;
-using G2rismBeta.API.Interfaces;
 
 namespace G2rismBeta.API.Validators
 {
     /// <summary>
     /// Validador para la actualización de empleados
     /// Los campos son opcionales, pero si se proporcionan deben cumplir las reglas de validación
+    /// Implementa SOLO validaciones síncronas (formato, rango, etc.)
+    /// Las validaciones asíncronas (BD) se realizan en el Service Layer
     /// </summary>
     public class EmpleadoUpdateDtoValidator : AbstractValidator<EmpleadoUpdateDto>
     {
-        private readonly IEmpleadoRepository _empleadoRepository;
-        private readonly IUsuarioRepository _usuarioRepository;
-
-        public EmpleadoUpdateDtoValidator(
-            IEmpleadoRepository empleadoRepository,
-            IUsuarioRepository usuarioRepository)
+        public EmpleadoUpdateDtoValidator()
         {
-            _empleadoRepository = empleadoRepository;
-            _usuarioRepository = usuarioRepository;
-
             // ========================================
             // VALIDACIONES DE ID_USUARIO (OPCIONAL)
             // ========================================
@@ -28,12 +21,10 @@ namespace G2rismBeta.API.Validators
             {
                 RuleFor(x => x.IdUsuario!.Value)
                     .GreaterThan(0)
-                    .WithMessage("El ID de usuario debe ser mayor a 0")
-                    .MustAsync(UsuarioExiste)
-                    .WithMessage("No existe un usuario con el ID especificado");
+                    .WithMessage("El ID de usuario debe ser mayor a 0");
 
-                // Nota: La validación de "usuario único" se hace en el Service
-                // porque necesita el ID del empleado que se está actualizando
+                // Nota: La validación de existencia y "usuario único" se hace en el Service
+                // porque necesita acceso a la BD y el ID del empleado que se está actualizando
             });
 
             // ========================================
@@ -44,11 +35,9 @@ namespace G2rismBeta.API.Validators
             {
                 RuleFor(x => x.IdJefe!.Value)
                     .GreaterThan(0)
-                    .WithMessage("El ID de jefe debe ser mayor a 0")
-                    .MustAsync(JefeExiste)
-                    .WithMessage("No existe un empleado con el ID de jefe especificado");
+                    .WithMessage("El ID de jefe debe ser mayor a 0");
 
-                // Nota: La validación de "no crear ciclos" se hace en el Service
+                // Nota: La validación de existencia y "no crear ciclos" se hace en el Service
             });
 
             // ========================================
@@ -208,30 +197,8 @@ namespace G2rismBeta.API.Validators
             {
                 RuleFor(x => x.Estado)
                     .Must(EstadoValido!)
-                    .WithMessage("Estado inválido. Valores permitidos: activo, inactivo, vacaciones, licencia");
+                    .WithMessage("Estado inválido. Valores permitidos: Activo, Inactivo, Vacaciones, Licencia");
             });
-        }
-
-        // ========================================
-        // MÉTODOS DE VALIDACIÓN ASÍNCRONOS
-        // ========================================
-
-        /// <summary>
-        /// Validar que el usuario existe en la base de datos
-        /// </summary>
-        private async Task<bool> UsuarioExiste(int idUsuario, CancellationToken cancellationToken)
-        {
-            var usuario = await _usuarioRepository.GetByIdAsync(idUsuario);
-            return usuario != null;
-        }
-
-        /// <summary>
-        /// Validar que el jefe existe en la base de datos
-        /// </summary>
-        private async Task<bool> JefeExiste(int idJefe, CancellationToken cancellationToken)
-        {
-            var jefe = await _empleadoRepository.GetByIdAsync(idJefe);
-            return jefe != null;
         }
 
         // ========================================
@@ -287,9 +254,13 @@ namespace G2rismBeta.API.Validators
 
         /// <summary>
         /// Validar que el estado sea uno de los valores permitidos
+        /// Acepta mayúsculas, minúsculas o capitalizado
         /// </summary>
         private bool EstadoValido(string estado)
         {
+            if (string.IsNullOrWhiteSpace(estado))
+                return false;
+
             var estadosValidos = new[] { "activo", "inactivo", "vacaciones", "licencia" };
             return estadosValidos.Contains(estado.ToLower());
         }

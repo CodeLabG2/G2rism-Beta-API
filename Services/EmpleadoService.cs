@@ -133,7 +133,11 @@ namespace G2rismBeta.API.Services
             // ====================================
 
             var empleado = _mapper.Map<Empleado>(empleadoCreateDto);
-            var empleadoCreado = await _empleadoRepository.AddAsync(empleado);
+            await _empleadoRepository.AddAsync(empleado);
+            await _empleadoRepository.SaveChangesAsync();
+
+            // Recargar el empleado con sus relaciones para retornar datos completos
+            var empleadoCreado = await _empleadoRepository.GetEmpleadoConRelacionesAsync(empleado.IdEmpleado);
 
             return _mapper.Map<EmpleadoResponseDto>(empleadoCreado);
         }
@@ -265,7 +269,12 @@ namespace G2rismBeta.API.Services
             if (!string.IsNullOrEmpty(empleadoUpdateDto.Estado))
                 empleadoExistente.Estado = empleadoUpdateDto.Estado;
 
-            var empleadoActualizado = await _empleadoRepository.UpdateAsync(empleadoExistente);
+            await _empleadoRepository.UpdateAsync(empleadoExistente);
+            await _empleadoRepository.SaveChangesAsync();
+
+            // Recargar el empleado con sus relaciones para retornar datos completos
+            var empleadoActualizado = await _empleadoRepository.GetEmpleadoConRelacionesAsync(idEmpleado);
+
             return _mapper.Map<EmpleadoResponseDto>(empleadoActualizado);
         }
 
@@ -299,7 +308,10 @@ namespace G2rismBeta.API.Services
             // ELIMINAR EMPLEADO
             // ====================================
 
-            return await _empleadoRepository.DeleteAsync(idEmpleado);
+            await _empleadoRepository.DeleteAsync(idEmpleado);
+            await _empleadoRepository.SaveChangesAsync();
+
+            return true;
         }
 
         // ========================================
@@ -579,8 +591,10 @@ namespace G2rismBeta.API.Services
                 empleado.Salario = nuevoSalario.Value;
             }
 
-            var resultado = await _empleadoRepository.UpdateAsync(empleado);
-            return resultado != null;
+            await _empleadoRepository.UpdateAsync(empleado);
+            await _empleadoRepository.SaveChangesAsync();
+
+            return true;
         }
 
         // ========================================
@@ -653,8 +667,10 @@ namespace G2rismBeta.API.Services
             // ====================================
 
             empleado.Salario = nuevoSalario;
-            var resultado = await _empleadoRepository.UpdateAsync(empleado);
-            return resultado != null;
+            await _empleadoRepository.UpdateAsync(empleado);
+            await _empleadoRepository.SaveChangesAsync();
+
+            return true;
         }
 
         // ========================================

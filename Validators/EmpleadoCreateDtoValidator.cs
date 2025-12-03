@@ -1,25 +1,17 @@
 using FluentValidation;
 using G2rismBeta.API.DTOs.Empleado;
-using G2rismBeta.API.Interfaces;
 
 namespace G2rismBeta.API.Validators
 {
     /// <summary>
     /// Validador para la creación de empleados
-    /// Implementa reglas de negocio y validaciones de formato usando FluentValidation
+    /// Implementa SOLO validaciones síncronas (formato, rango, etc.)
+    /// Las validaciones asíncronas (BD) se realizan en el Service Layer
     /// </summary>
     public class EmpleadoCreateDtoValidator : AbstractValidator<EmpleadoCreateDto>
     {
-        private readonly IEmpleadoRepository _empleadoRepository;
-        private readonly IUsuarioRepository _usuarioRepository;
-
-        public EmpleadoCreateDtoValidator(
-            IEmpleadoRepository empleadoRepository,
-            IUsuarioRepository usuarioRepository)
+        public EmpleadoCreateDtoValidator()
         {
-            _empleadoRepository = empleadoRepository;
-            _usuarioRepository = usuarioRepository;
-
             // ========================================
             // VALIDACIONES DE ID_USUARIO
             // ========================================
@@ -28,19 +20,15 @@ namespace G2rismBeta.API.Validators
                 .NotEmpty()
                 .WithMessage("El ID de usuario es obligatorio")
                 .GreaterThan(0)
-                .WithMessage("El ID de usuario debe ser mayor a 0")
-                .MustAsync(UsuarioExiste)
-                .WithMessage("No existe un usuario con el ID especificado")
-                .MustAsync(UsuarioNoTieneEmpleado)
-                .WithMessage("Este usuario ya está asociado a otro empleado");
+                .WithMessage("El ID de usuario debe ser mayor a 0");
 
             // ========================================
             // VALIDACIONES DE ID_JEFE (OPCIONAL)
             // ========================================
 
             RuleFor(x => x.IdJefe)
-                .MustAsync(JefeExisteSiSeProporcionaAsync)
-                .WithMessage("No existe un empleado con el ID de jefe especificado")
+                .GreaterThan(0)
+                .WithMessage("El ID de jefe debe ser mayor a 0")
                 .When(x => x.IdJefe.HasValue);
 
             // ========================================
@@ -83,9 +71,7 @@ namespace G2rismBeta.API.Validators
                 .MaximumLength(20)
                 .WithMessage("El documento no puede exceder 20 caracteres")
                 .Matches(@"^[a-zA-Z0-9-]+$")
-                .WithMessage("El documento solo puede contener letras, números y guiones")
-                .MustAsync(DocumentoNoExiste)
-                .WithMessage("Ya existe un empleado con este documento de identidad");
+                .WithMessage("El documento solo puede contener letras, números y guiones");
 
             // ========================================
             // VALIDACIONES DE TIPO DE DOCUMENTO
@@ -183,50 +169,7 @@ namespace G2rismBeta.API.Validators
                 .NotEmpty()
                 .WithMessage("El estado es obligatorio")
                 .Must(EstadoValido)
-                .WithMessage("Estado inválido. Valores permitidos: activo, inactivo, vacaciones, licencia");
-        }
-
-        // ========================================
-        // MÉTODOS DE VALIDACIÓN ASÍNCRONOS
-        // ========================================
-
-        /// <summary>
-        /// Validar que el usuario existe en la base de datos
-        /// </summary>
-        private async Task<bool> UsuarioExiste(int idUsuario, CancellationToken cancellationToken)
-        {
-            var usuario = await _usuarioRepository.GetByIdAsync(idUsuario);
-            return usuario != null;
-        }
-
-        /// <summary>
-        /// Validar que el usuario no esté ya asociado a otro empleado
-        /// </summary>
-        private async Task<bool> UsuarioNoTieneEmpleado(int idUsuario, CancellationToken cancellationToken)
-        {
-            var tieneEmpleado = await _empleadoRepository.UsuarioTieneEmpleadoAsync(idUsuario);
-            return !tieneEmpleado; // Retornar true si NO tiene empleado
-        }
-
-        /// <summary>
-        /// Validar que el documento de identidad no exista en la base de datos
-        /// </summary>
-        private async Task<bool> DocumentoNoExiste(string documentoIdentidad, CancellationToken cancellationToken)
-        {
-            var existe = await _empleadoRepository.ExisteDocumentoAsync(documentoIdentidad);
-            return !existe; // Retornar true si NO existe
-        }
-
-        /// <summary>
-        /// Validar que el jefe existe si se proporciona un ID de jefe
-        /// </summary>
-        private async Task<bool> JefeExisteSiSeProporcionaAsync(int? idJefe, CancellationToken cancellationToken)
-        {
-            if (!idJefe.HasValue)
-                return true; // Si no se proporciona jefe, es válido
-
-            var jefe = await _empleadoRepository.GetByIdAsync(idJefe.Value);
-            return jefe != null;
+                .WithMessage("Estado inválido. Valores permitidos: Activo, Inactivo, Vacaciones, Licencia");
         }
 
         // ========================================
@@ -282,9 +225,13 @@ namespace G2rismBeta.API.Validators
 
         /// <summary>
         /// Validar que el estado sea uno de los valores permitidos
+        /// Acepta mayúsculas, minúsculas o capitalizado
         /// </summary>
         private bool EstadoValido(string estado)
         {
+            if (string.IsNullOrWhiteSpace(estado))
+                return false;
+
             var estadosValidos = new[] { "activo", "inactivo", "vacaciones", "licencia" };
             return estadosValidos.Contains(estado.ToLower());
         }
