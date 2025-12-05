@@ -12,6 +12,7 @@ using G2rismBeta.API.DTOs.Empleado;
 using G2rismBeta.API.DTOs.Proveedor;
 using G2rismBeta.API.DTOs.ContratoProveedor;
 using G2rismBeta.API.DTOs.Aerolinea;
+using G2rismBeta.API.DTOs.Vuelo;
 
 namespace G2rismBeta.API.Mappings;
 
@@ -338,5 +339,35 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.EstaActiva, opt => opt.MapFrom(src => src.EstaActiva))
             .ForMember(dest => dest.NombreCompleto, opt => opt.MapFrom(src => src.NombreCompleto))
             .ForMember(dest => dest.TienePoliticasEquipaje, opt => opt.MapFrom(src => src.TienePoliticasEquipaje));
+
+        // ========================================
+        // MAPEOS PARA VUELO
+        // ========================================
+
+        // CreateDto → Modelo (para crear)
+        CreateMap<VueloCreateDto, Vuelo>()
+            .ForMember(dest => dest.IdVuelo, opt => opt.Ignore())
+            .ForMember(dest => dest.Estado, opt => opt.Ignore())
+            .ForMember(dest => dest.Aerolinea, opt => opt.Ignore())
+            .ForMember(dest => dest.Proveedor, opt => opt.Ignore());
+
+        // UpdateDto → Modelo (para actualizar - solo campos no nulos)
+        CreateMap<VueloUpdateDto, Vuelo>()
+            .ForMember(dest => dest.IdVuelo, opt => opt.Ignore())
+            .ForMember(dest => dest.IdAerolinea, opt => opt.Ignore())
+            .ForMember(dest => dest.IdProveedor, opt => opt.Ignore())
+            .ForMember(dest => dest.Aerolinea, opt => opt.Ignore())
+            .ForMember(dest => dest.Proveedor, opt => opt.Ignore())
+            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+        // Modelo → ResponseDto (para devolver)
+        CreateMap<Vuelo, VueloResponseDto>()
+            .ForMember(dest => dest.NombreAerolinea, opt => opt.MapFrom(src => src.Aerolinea != null ? src.Aerolinea.Nombre : null))
+            .ForMember(dest => dest.CodigoIataAerolinea, opt => opt.MapFrom(src => src.Aerolinea != null ? src.Aerolinea.CodigoIata : null))
+            .ForMember(dest => dest.NombreProveedor, opt => opt.MapFrom(src => src.Proveedor != null ? src.Proveedor.NombreEmpresa : null))
+            .ForMember(dest => dest.TieneDisponibilidad, opt => opt.MapFrom(src => src.TieneDisponibilidad))
+            .ForMember(dest => dest.EsVueloDirecto, opt => opt.MapFrom(src => src.EsVueloDirecto))
+            .ForMember(dest => dest.DuracionFormateada, opt => opt.MapFrom(src => src.DuracionFormateada))
+            .ForMember(dest => dest.EstaActivo, opt => opt.MapFrom(src => src.EstaActivo));
     }
 }

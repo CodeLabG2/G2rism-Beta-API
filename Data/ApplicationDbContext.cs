@@ -568,6 +568,46 @@ public class ApplicationDbContext : DbContext
                 .WithOne(v => v.Aerolinea)
                 .HasForeignKey(v => v.IdAerolinea)
                 .OnDelete(DeleteBehavior.Restrict);
-        }); 
+        });
+
+        // ====================================
+        // CONFIGURACIÓN DE LA TABLA VUELOS
+        // ====================================
+        modelBuilder.Entity<Vuelo>(entity =>
+        {
+            // Índice único en número de vuelo
+            entity.HasIndex(e => e.NumeroVuelo)
+                .IsUnique()
+                .HasDatabaseName("idx_vuelo_numero_unique");
+
+            // Índice compuesto para búsqueda origen-destino
+            entity.HasIndex(e => new { e.Origen, e.Destino })
+                .HasDatabaseName("idx_vuelo_origen_destino");
+
+            // Índice en fecha_salida para búsquedas temporales
+            entity.HasIndex(e => e.FechaSalida)
+                .HasDatabaseName("idx_vuelo_fecha_salida");
+
+            // Índice en estado
+            entity.HasIndex(e => e.Estado)
+                .HasDatabaseName("idx_vuelo_estado");
+
+            // Índice en id_aerolinea
+            entity.HasIndex(e => e.IdAerolinea)
+                .HasDatabaseName("idx_vuelo_aerolinea");
+
+            // Índice en id_proveedor
+            entity.HasIndex(e => e.IdProveedor)
+                .HasDatabaseName("idx_vuelo_proveedor");
+
+            // Relación con Aerolínea (N:1) - ya configurada desde Aerolinea
+
+            // Relación con Proveedor (N:1)
+            entity.HasOne(v => v.Proveedor)
+                .WithMany() // No necesitamos navegación inversa en Proveedor por ahora
+                .HasForeignKey(v => v.IdProveedor)
+                .OnDelete(DeleteBehavior.Restrict) // No eliminar proveedor si tiene vuelos
+                .HasConstraintName("fk_vuelo_proveedor");
+        });
     }
 }
