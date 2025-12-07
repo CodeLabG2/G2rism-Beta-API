@@ -15,6 +15,7 @@ using G2rismBeta.API.DTOs.Aerolinea;
 using G2rismBeta.API.DTOs.Vuelo;
 using G2rismBeta.API.DTOs.Hotel;
 using G2rismBeta.API.DTOs.ServicioAdicional;
+using G2rismBeta.API.DTOs.PaqueteTuristico;
 
 namespace G2rismBeta.API.Mappings;
 
@@ -432,5 +433,34 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.NombreCompleto, opt => opt.MapFrom(src => src.NombreCompleto))
             .ForMember(dest => dest.PrecioFormateado, opt => opt.MapFrom(src => src.PrecioFormateado))
             .ForMember(dest => dest.DuracionFormateada, opt => opt.MapFrom(src => src.DuracionFormateada));
+
+        // ========================================
+        // MAPEOS PARA PAQUETE TURÍSTICO
+        // ========================================
+
+        // CreateDto → Modelo (para crear)
+        CreateMap<PaqueteTuristicoCreateDto, PaqueteTuristico>()
+            .ForMember(dest => dest.IdPaquete, opt => opt.Ignore()) // El ID lo genera la BD
+            .ForMember(dest => dest.FechaCreacion, opt => opt.Ignore()) // Se asigna en el service
+            .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore());
+
+        // UpdateDto → Modelo (para actualizar - solo actualiza campos no nulos)
+        CreateMap<PaqueteTuristicoUpdateDto, PaqueteTuristico>()
+            .ForMember(dest => dest.IdPaquete, opt => opt.Ignore())
+            .ForMember(dest => dest.FechaCreacion, opt => opt.Ignore())
+            .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore()) // Se asigna en el service
+            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+        // Modelo → ResponseDto (para devolver)
+        CreateMap<PaqueteTuristico, PaqueteTuristicoResponseDto>()
+            .ForMember(dest => dest.EstaActivo, opt => opt.MapFrom(src => src.EstaActivo))
+            .ForMember(dest => dest.EstaDisponible, opt => opt.MapFrom(src => src.EstaDisponible))
+            .ForMember(dest => dest.TieneFechasDefinidas, opt => opt.MapFrom(src => src.TieneFechasDefinidas))
+            .ForMember(dest => dest.EstaVigente, opt => opt.MapFrom(src => src.EstaVigente))
+            .ForMember(dest => dest.ProximoAIniciar, opt => opt.MapFrom(src => src.ProximoAIniciar))
+            .ForMember(dest => dest.NombreCompleto, opt => opt.MapFrom(src => src.NombreCompleto))
+            .ForMember(dest => dest.DuracionFormateada, opt => opt.MapFrom(src => src.DuracionFormateada))
+            .ForMember(dest => dest.PrecioFormateado, opt => opt.MapFrom(src => src.PrecioFormateado))
+            .ForMember(dest => dest.EstadoDisponibilidad, opt => opt.MapFrom(src => src.EstadoDisponibilidad));
     }
 }

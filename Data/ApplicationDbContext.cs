@@ -126,6 +126,11 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<ServicioAdicional> ServiciosAdicionales { get; set; }
 
+    /// <summary>
+    /// Tabla de Paquetes Turísticos
+    /// </summary>
+    public DbSet<PaqueteTuristico> PaquetesTuristicos { get; set; }
+
     // ========================================
     // CONFIGURACIÓN AVANZADA DE ENTIDADES
     // ========================================
