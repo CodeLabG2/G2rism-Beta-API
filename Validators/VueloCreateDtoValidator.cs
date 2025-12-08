@@ -45,7 +45,7 @@ public class VueloCreateDtoValidator : AbstractValidator<VueloCreateDto>
         // Fecha Llegada
         RuleFor(x => x.FechaLlegada)
             .NotEmpty().WithMessage("La fecha de llegada es obligatoria")
-            .GreaterThan(x => x.FechaSalida).WithMessage("La fecha de llegada debe ser posterior a la fecha de salida");
+            .GreaterThanOrEqualTo(x => x.FechaSalida).WithMessage("La fecha de llegada debe ser posterior o igual a la fecha de salida");
 
         // Hora Salida
         RuleFor(x => x.HoraSalida)

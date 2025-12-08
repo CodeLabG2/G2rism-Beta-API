@@ -180,8 +180,51 @@ public class VueloService : IVueloService
                 }
             }
 
-            // Aplicar cambios (solo campos no nulos)
-            _mapper.Map(updateDto, vueloExistente);
+            // Actualizar solo los campos que vienen en el DTO (no nulos)
+            if (updateDto.NumeroVuelo != null)
+                vueloExistente.NumeroVuelo = updateDto.NumeroVuelo;
+
+            if (updateDto.Origen != null)
+                vueloExistente.Origen = updateDto.Origen;
+
+            if (updateDto.Destino != null)
+                vueloExistente.Destino = updateDto.Destino;
+
+            if (updateDto.FechaSalida.HasValue)
+                vueloExistente.FechaSalida = updateDto.FechaSalida.Value;
+
+            if (updateDto.FechaLlegada.HasValue)
+                vueloExistente.FechaLlegada = updateDto.FechaLlegada.Value;
+
+            if (updateDto.HoraSalida.HasValue)
+                vueloExistente.HoraSalida = updateDto.HoraSalida.Value;
+
+            if (updateDto.HoraLlegada.HasValue)
+                vueloExistente.HoraLlegada = updateDto.HoraLlegada.Value;
+
+            if (updateDto.CuposDisponibles.HasValue)
+                vueloExistente.CuposDisponibles = updateDto.CuposDisponibles.Value;
+
+            if (updateDto.CuposTotales.HasValue)
+                vueloExistente.CuposTotales = updateDto.CuposTotales.Value;
+
+            if (updateDto.PrecioEconomica.HasValue)
+                vueloExistente.PrecioEconomica = updateDto.PrecioEconomica.Value;
+
+            if (updateDto.PrecioEjecutiva.HasValue)
+                vueloExistente.PrecioEjecutiva = updateDto.PrecioEjecutiva;
+
+            if (updateDto.DuracionMinutos.HasValue)
+                vueloExistente.DuracionMinutos = updateDto.DuracionMinutos.Value;
+
+            if (updateDto.Escalas.HasValue)
+                vueloExistente.Escalas = updateDto.Escalas.Value;
+
+            if (updateDto.Estado.HasValue)
+                vueloExistente.Estado = updateDto.Estado.Value;
+
+            if (updateDto.Observaciones != null)
+                vueloExistente.Observaciones = updateDto.Observaciones;
 
             await _vueloRepository.UpdateAsync(vueloExistente);
             _logger.LogInformation("Vuelo actualizado exitosamente: {Id}", id);

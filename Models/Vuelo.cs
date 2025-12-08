@@ -85,7 +85,7 @@ public class Vuelo
     public string DuracionFormateada => $"{DuracionMinutos / 60}h {DuracionMinutos % 60}m";
 
     [NotMapped]
-    public bool EstaActivo => Estado && FechaSalida > DateTime.Now;
+    public bool EstaActivo => Estado && FechaSalida.Date >= DateTime.Now.Date;
 
     // Relaciones
     public virtual Aerolinea? Aerolinea { get; set; }

@@ -31,14 +31,12 @@ public class VueloUpdateDtoValidator : AbstractValidator<VueloUpdateDto>
             .MinimumLength(3).WithMessage("El destino debe tener al menos 3 caracteres")
             .When(x => x.Destino != null);
 
-        // Fecha Salida
-        RuleFor(x => x.FechaSalida)
-            .GreaterThan(DateTime.Now).WithMessage("La fecha de salida debe ser mayor a la fecha actual")
-            .When(x => x.FechaSalida.HasValue);
+        // Fecha Salida (sin validar que sea futura - permite actualizar vuelos históricos)
+        // La validación solo está en CreateDto
 
         // Fecha Llegada
         RuleFor(x => x.FechaLlegada)
-            .GreaterThan(x => x.FechaSalida ?? DateTime.MinValue).WithMessage("La fecha de llegada debe ser posterior a la fecha de salida")
+            .GreaterThanOrEqualTo(x => x.FechaSalida ?? DateTime.MinValue).WithMessage("La fecha de llegada debe ser posterior o igual a la fecha de salida")
             .When(x => x.FechaLlegada.HasValue);
 
         // Hora Salida
