@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using G2rismBeta.API.DTOs.Reserva;
+using G2rismBeta.API.DTOs.ReservaHotel;
 using G2rismBeta.API.Interfaces;
 
 namespace G2rismBeta.API.Controllers;
@@ -16,14 +17,19 @@ namespace G2rismBeta.API.Controllers;
 public class ReservasController : ControllerBase
 {
     private readonly IReservaService _reservaService;
+    private readonly IReservaHotelService _reservaHotelService;
     private readonly ILogger<ReservasController> _logger;
 
     /// <summary>
-    /// Constructor: Recibe el servicio de reservas y logger por inyección de dependencias
+    /// Constructor: Recibe el servicio de reservas, servicio de reserva-hotel y logger por inyección de dependencias
     /// </summary>
-    public ReservasController(IReservaService reservaService, ILogger<ReservasController> logger)
+    public ReservasController(
+        IReservaService reservaService,
+        IReservaHotelService reservaHotelService,
+        ILogger<ReservasController> logger)
     {
         _reservaService = reservaService;
+        _reservaHotelService = reservaHotelService;
         _logger = logger;
     }
 
@@ -385,6 +391,207 @@ public class ReservasController : ControllerBase
         {
             _logger.LogError(ex, "❌ Error al cancelar la reserva");
             return StatusCode(500, new { message = "Error al cancelar la reserva", error = ex.Message });
+        }
+    }
+
+    // ========================================
+    // ENDPOINTS DE GESTIÓN DE HOTELES EN RESERVAS
+    // ========================================
+
+    /// <summary>
+    /// Agregar un hotel a una reserva existente
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="dto">Datos del hotel a agregar</param>
+    /// <remarks>
+    /// Ejemplo de request:
+    ///
+    ///     POST /api/reservas/1/hoteles
+    ///     {
+    ///         "idHotel": 5,
+    ///         "fechaCheckin": "2025-12-20",
+    ///         "fechaCheckout": "2025-12-23",
+    ///         "numeroHabitaciones": 2,
+    ///         "tipoHabitacion": "doble",
+    ///         "numeroHuespedes": 4,
+    ///         "observaciones": "Habitaciones contiguas preferiblemente"
+    ///     }
+    ///
+    /// El sistema calcula automáticamente:
+    /// - Número de noches
+    /// - Precio por noche (del hotel actual)
+    /// - Subtotal (noches * precio * habitaciones)
+    /// - Actualiza el monto total de la reserva
+    /// </remarks>
+    /// <response code="201">Hotel agregado exitosamente a la reserva</response>
+    /// <response code="400">Datos inválidos o reglas de negocio no cumplidas</response>
+    /// <response code="404">Reserva o Hotel no encontrado</response>
+    [HttpPost("{id}/hoteles")]
+    [ProducesResponseType(typeof(ReservaHotelResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ReservaHotelResponseDto>> AgregarHotelAReserva(int id, [FromBody] ReservaHotelCreateDto dto)
+    {
+        try
+        {
+            _logger.LogInformation("🏨 Agregando hotel {IdHotel} a la reserva {IdReserva}", dto.IdHotel, id);
+            var reservaHotel = await _reservaHotelService.AgregarHotelAReservaAsync(id, dto);
+            _logger.LogInformation("✅ Hotel agregado exitosamente. ID de relación: {Id}", reservaHotel.Id);
+
+            return CreatedAtAction(
+                nameof(ObtenerHotelDeReserva),
+                new { id, idReservaHotel = reservaHotel.Id },
+                reservaHotel);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Recurso no encontrado");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Datos inválidos");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Operación no válida");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al agregar hotel a la reserva");
+            return StatusCode(500, new { message = "Error al agregar hotel a la reserva", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtener todos los hoteles de una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <remarks>
+    /// Ejemplo de request:
+    ///
+    ///     GET /api/reservas/1/hoteles
+    ///
+    /// Devuelve la lista de todos los hoteles incluidos en la reserva con:
+    /// - Información del hotel (nombre, ciudad)
+    /// - Fechas de check-in y check-out
+    /// - Número de habitaciones y huéspedes
+    /// - Subtotal calculado
+    /// - Propiedades computadas (número de noches, días hasta check-in, etc.)
+    /// </remarks>
+    /// <response code="200">Lista de hoteles obtenida exitosamente</response>
+    [HttpGet("{id}/hoteles")]
+    [ProducesResponseType(typeof(IEnumerable<ReservaHotelResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<ReservaHotelResponseDto>>> ObtenerHotelesPorReserva(int id)
+    {
+        try
+        {
+            _logger.LogInformation("📋 Obteniendo hoteles de la reserva {IdReserva}", id);
+            var hoteles = await _reservaHotelService.ObtenerHotelesPorReservaAsync(id);
+            _logger.LogInformation("✅ {Count} hoteles encontrados", hoteles.Count());
+            return Ok(hoteles);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al obtener hoteles de la reserva");
+            return StatusCode(500, new { message = "Error al obtener hoteles de la reserva", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtener información detallada de un hotel específico en una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="idReservaHotel">ID de la relación ReservaHotel</param>
+    /// <remarks>
+    /// Ejemplo de request:
+    ///
+    ///     GET /api/reservas/1/hoteles/5
+    ///
+    /// </remarks>
+    /// <response code="200">Información del hotel obtenida exitosamente</response>
+    /// <response code="404">Hotel no encontrado en esta reserva</response>
+    [HttpGet("{id}/hoteles/{idReservaHotel}")]
+    [ProducesResponseType(typeof(ReservaHotelResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ReservaHotelResponseDto>> ObtenerHotelDeReserva(int id, int idReservaHotel)
+    {
+        try
+        {
+            _logger.LogInformation("🔍 Obteniendo hotel {IdReservaHotel} de la reserva {IdReserva}", idReservaHotel, id);
+            var reservaHotel = await _reservaHotelService.ObtenerPorIdAsync(idReservaHotel);
+
+            // Verificar que el hotel pertenece a esta reserva
+            if (reservaHotel.IdReserva != id)
+            {
+                _logger.LogWarning("⚠️ El hotel {IdReservaHotel} no pertenece a la reserva {IdReserva}", idReservaHotel, id);
+                return NotFound(new { message = "El hotel especificado no pertenece a esta reserva" });
+            }
+
+            return Ok(reservaHotel);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Hotel no encontrado");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al obtener información del hotel");
+            return StatusCode(500, new { message = "Error al obtener información del hotel", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Eliminar un hotel de una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="idReservaHotel">ID de la relación ReservaHotel</param>
+    /// <remarks>
+    /// Ejemplo de request:
+    ///
+    ///     DELETE /api/reservas/1/hoteles/5
+    ///
+    /// Al eliminar un hotel:
+    /// - Se elimina la relación ReservaHotel
+    /// - Se recalcula automáticamente el monto total de la reserva
+    /// - Se actualiza el saldo pendiente
+    /// </remarks>
+    /// <response code="200">Hotel eliminado exitosamente de la reserva</response>
+    /// <response code="404">Hotel no encontrado en esta reserva</response>
+    [HttpDelete("{id}/hoteles/{idReservaHotel}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> EliminarHotelDeReserva(int id, int idReservaHotel)
+    {
+        try
+        {
+            _logger.LogInformation("🗑️ Eliminando hotel {IdReservaHotel} de la reserva {IdReserva}", idReservaHotel, id);
+
+            // Primero verificar que el hotel pertenece a esta reserva
+            var reservaHotel = await _reservaHotelService.ObtenerPorIdAsync(idReservaHotel);
+            if (reservaHotel.IdReserva != id)
+            {
+                _logger.LogWarning("⚠️ El hotel {IdReservaHotel} no pertenece a la reserva {IdReserva}", idReservaHotel, id);
+                return NotFound(new { message = "El hotel especificado no pertenece a esta reserva" });
+            }
+
+            await _reservaHotelService.EliminarHotelDeReservaAsync(idReservaHotel);
+            _logger.LogInformation("✅ Hotel eliminado exitosamente de la reserva");
+
+            return Ok(new { message = "Hotel eliminado exitosamente de la reserva" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Hotel no encontrado");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al eliminar hotel de la reserva");
+            return StatusCode(500, new { message = "Error al eliminar hotel de la reserva", error = ex.Message });
         }
     }
 }

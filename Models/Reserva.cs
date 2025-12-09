@@ -152,12 +152,11 @@ public class Reserva
     [ForeignKey("IdEmpleado")]
     public virtual Empleado? Empleado { get; set; }
 
-    // TODO: Descomentar en Día 3 Tarea 2-4 cuando se creen las tablas intermedias
-    // /// <summary>
-    // /// Hoteles incluidos en la reserva (relación 1:N)
-    // /// Una reserva puede tener múltiples hoteles
-    // /// </summary>
-    // public virtual ICollection<ReservaHotel> ReservasHoteles { get; set; } = new List<ReservaHotel>();
+    /// <summary>
+    /// Hoteles incluidos en la reserva (relación 1:N)
+    /// Una reserva puede tener múltiples hoteles
+    /// </summary>
+    public virtual ICollection<ReservaHotel> ReservasHoteles { get; set; } = new List<ReservaHotel>();
 
     // /// <summary>
     // /// Vuelos incluidos en la reserva (relación 1:N)

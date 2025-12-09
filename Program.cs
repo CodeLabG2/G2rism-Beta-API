@@ -93,6 +93,7 @@ builder.Services.AddScoped<IPaqueteTuristicoRepository, PaqueteTuristicoReposito
 // ========================================
 
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+builder.Services.AddScoped<IReservaHotelRepository, ReservaHotelRepository>();
 
 // ========================================
 // REGISTRAR SERVICES - ROLES Y PERMISOS
@@ -140,6 +141,7 @@ builder.Services.AddScoped<IPaqueteTuristicoService, PaqueteTuristicoService>();
 // ========================================
 
 builder.Services.AddScoped<IReservaService, ReservaService>();
+builder.Services.AddScoped<IReservaHotelService, ReservaHotelService>();
 
 // ========================================
 // CONFIGURACIÓN DE AUTENTICACIÓN JWT

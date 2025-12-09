@@ -140,8 +140,12 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<Reserva> Reservas { get; set; }
 
-    // TODO: Agregar tablas intermedias en Día 3 Tarea 2-4
-    // public DbSet<ReservaHotel> ReservasHoteles { get; set; }
+    /// <summary>
+    /// Tabla intermedia Reservas-Hoteles (relación N:M)
+    /// </summary>
+    public DbSet<ReservaHotel> ReservasHoteles { get; set; }
+
+    // TODO: Agregar en Día 4
     // public DbSet<ReservaVuelo> ReservasVuelos { get; set; }
     // public DbSet<ReservaPaquete> ReservasPaquetes { get; set; }
     // public DbSet<ReservaServicio> ReservasServicios { get; set; }
@@ -740,10 +744,42 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(r => r.IdEmpleado)
                 .OnDelete(DeleteBehavior.Restrict) // No eliminar empleado si tiene reservas asignadas
                 .HasConstraintName("fk_reserva_empleado");
+        });
 
-            // TODO: Agregar configuración de relaciones con servicios en Día 3 Tarea 2-4
-            // Las relaciones con ReservaHotel, ReservaVuelo, ReservaPaquete, ReservaServicio
-            // se configurarán cuando se creen esas tablas intermedias
+        // ========================================
+        // CONFIGURACIÓN: RESERVA_HOTEL
+        // ========================================
+        modelBuilder.Entity<ReservaHotel>(entity =>
+        {
+            // Índice en id_reserva para consultas rápidas
+            entity.HasIndex(e => e.IdReserva)
+                .HasDatabaseName("idx_reserva_hotel_reserva");
+
+            // Índice en id_hotel para consultas rápidas
+            entity.HasIndex(e => e.IdHotel)
+                .HasDatabaseName("idx_reserva_hotel_hotel");
+
+            // Índice en fecha_checkin para filtrado temporal
+            entity.HasIndex(e => e.FechaCheckin)
+                .HasDatabaseName("idx_reserva_hotel_checkin");
+
+            // Índice compuesto para búsqueda de reservas de hotel por fechas
+            entity.HasIndex(e => new { e.IdHotel, e.FechaCheckin, e.FechaCheckout })
+                .HasDatabaseName("idx_reserva_hotel_fechas");
+
+            // Relación con Reserva (N:1)
+            entity.HasOne(rh => rh.Reserva)
+                .WithMany(r => r.ReservasHoteles)
+                .HasForeignKey(rh => rh.IdReserva)
+                .OnDelete(DeleteBehavior.Cascade) // Si se elimina la reserva, eliminar sus hoteles
+                .HasConstraintName("fk_reserva_hotel_reserva");
+
+            // Relación con Hotel (N:1)
+            entity.HasOne(rh => rh.Hotel)
+                .WithMany() // No necesitamos navegación inversa en Hotel
+                .HasForeignKey(rh => rh.IdHotel)
+                .OnDelete(DeleteBehavior.Restrict) // No eliminar hotel si tiene reservas
+                .HasConstraintName("fk_reserva_hotel_hotel");
         });
     }
 }

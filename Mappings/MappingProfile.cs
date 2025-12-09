@@ -17,6 +17,7 @@ using G2rismBeta.API.DTOs.Hotel;
 using G2rismBeta.API.DTOs.ServicioAdicional;
 using G2rismBeta.API.DTOs.PaqueteTuristico;
 using G2rismBeta.API.DTOs.Reserva;
+using G2rismBeta.API.DTOs.ReservaHotel;
 
 namespace G2rismBeta.API.Mappings;
 
@@ -515,5 +516,29 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ViajeIniciado, opt => opt.MapFrom(src => src.ViajeIniciado))
             .ForMember(dest => dest.ViajeCompleto, opt => opt.MapFrom(src => src.ViajeCompleto))
             .ForMember(dest => dest.DiasHastaViaje, opt => opt.MapFrom(src => src.DiasHastaViaje));
+
+        // ========================================
+        // MAPEOS PARA RESERVA_HOTEL
+        // ========================================
+
+        // CreateDto → Modelo (para crear)
+        CreateMap<ReservaHotelCreateDto, ReservaHotel>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore()) // El ID lo genera la BD
+            .ForMember(dest => dest.IdReserva, opt => opt.Ignore()) // Se establece en el servicio
+            .ForMember(dest => dest.PrecioPorNoche, opt => opt.Ignore()) // Se obtiene del hotel
+            .ForMember(dest => dest.Subtotal, opt => opt.Ignore()) // Se calcula en el servicio
+            .ForMember(dest => dest.Reserva, opt => opt.Ignore()) // Navegación
+            .ForMember(dest => dest.Hotel, opt => opt.Ignore()); // Navegación
+
+        // Modelo → ResponseDto (para devolver)
+        CreateMap<ReservaHotel, ReservaHotelResponseDto>()
+            .ForMember(dest => dest.NombreHotel, opt => opt.MapFrom(src =>
+                src.Hotel != null ? src.Hotel.Nombre : "N/A"))
+            .ForMember(dest => dest.CiudadHotel, opt => opt.MapFrom(src =>
+                src.Hotel != null ? src.Hotel.Ciudad : "N/A"))
+            .ForMember(dest => dest.NumeroNoches, opt => opt.MapFrom(src => src.NumeroNoches))
+            .ForMember(dest => dest.CostoPorHabitacion, opt => opt.MapFrom(src => src.CostoPorHabitacion))
+            .ForMember(dest => dest.EstadiaActiva, opt => opt.MapFrom(src => src.EstadiaActiva))
+            .ForMember(dest => dest.DiasHastaCheckin, opt => opt.MapFrom(src => src.DiasHastaCheckin));
     }
 }
