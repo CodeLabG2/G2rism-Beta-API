@@ -170,11 +170,11 @@ public class Reserva
     /// </summary>
     public virtual ICollection<ReservaPaquete> ReservasPaquetes { get; set; } = new List<ReservaPaquete>();
 
-    // /// <summary>
-    // /// Servicios adicionales incluidos en la reserva (relación 1:N)
-    // /// Una reserva puede tener múltiples servicios adicionales
-    // /// </summary>
-    // public virtual ICollection<ReservaServicio> ReservasServicios { get; set; } = new List<ReservaServicio>();
+    /// <summary>
+    /// Servicios adicionales incluidos en la reserva (relación 1:N)
+    /// Una reserva puede tener múltiples servicios adicionales
+    /// </summary>
+    public virtual ICollection<ReservaServicio> ReservasServicios { get; set; } = new List<ReservaServicio>();
 
     // TODO: Agregar en Día 5
     // public virtual ICollection<Factura> Facturas { get; set; } = new List<Factura>();

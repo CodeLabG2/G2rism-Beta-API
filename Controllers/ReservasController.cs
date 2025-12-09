@@ -4,6 +4,7 @@ using G2rismBeta.API.DTOs.Reserva;
 using G2rismBeta.API.DTOs.ReservaHotel;
 using G2rismBeta.API.DTOs.ReservaVuelo;
 using G2rismBeta.API.DTOs.ReservaPaquete;
+using G2rismBeta.API.DTOs.ReservaServicio;
 using G2rismBeta.API.Interfaces;
 
 namespace G2rismBeta.API.Controllers;
@@ -22,6 +23,7 @@ public class ReservasController : ControllerBase
     private readonly IReservaHotelService _reservaHotelService;
     private readonly IReservaVueloService _reservaVueloService;
     private readonly IReservaPaqueteService _reservaPaqueteService;
+    private readonly IReservaServicioService _reservaServicioService;
     private readonly ILogger<ReservasController> _logger;
 
     /// <summary>
@@ -32,12 +34,14 @@ public class ReservasController : ControllerBase
         IReservaHotelService reservaHotelService,
         IReservaVueloService reservaVueloService,
         IReservaPaqueteService reservaPaqueteService,
+        IReservaServicioService reservaServicioService,
         ILogger<ReservasController> logger)
     {
         _reservaService = reservaService;
         _reservaHotelService = reservaHotelService;
         _reservaVueloService = reservaVueloService;
         _reservaPaqueteService = reservaPaqueteService;
+        _reservaServicioService = reservaServicioService;
         _logger = logger;
     }
 
@@ -975,6 +979,164 @@ public class ReservasController : ControllerBase
         {
             _logger.LogError(ex, "❌ Error al eliminar paquete de la reserva");
             return StatusCode(500, new { message = "Error al eliminar paquete de la reserva", error = ex.Message });
+        }
+    }
+
+    // ========================================
+    // ENDPOINTS PARA SERVICIOS ADICIONALES
+    // ========================================
+
+    /// <summary>
+    /// Agregar un servicio adicional a una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="dto">Datos del servicio a agregar</param>
+    /// <returns>Servicio agregado</returns>
+    [HttpPost("{id}/servicios")]
+    [ProducesResponseType(typeof(ReservaServicioResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ReservaServicioResponseDto>> AgregarServicioAReserva(int id, [FromBody] ReservaServicioCreateDto dto)
+    {
+        try
+        {
+            _logger.LogInformation("🎯 Agregando servicio a reserva {IdReserva}", id);
+
+            // Asegurar que el ID de la reserva coincida
+            dto.IdReserva = id;
+
+            var servicio = await _reservaServicioService.AgregarServicioAReservaAsync(dto);
+
+            _logger.LogInformation("✅ Servicio agregado exitosamente");
+
+            return CreatedAtAction(
+                nameof(GetServiciosDeReserva),
+                new { id = servicio.IdReserva },
+                servicio);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Reserva o servicio no encontrado");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Error de validación al agregar servicio");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al agregar servicio a la reserva");
+            return StatusCode(500, new { message = "Error al agregar servicio a la reserva", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtener todos los servicios adicionales de una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <returns>Lista de servicios de la reserva</returns>
+    [HttpGet("{id}/servicios")]
+    [ProducesResponseType(typeof(IEnumerable<ReservaServicioResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<ReservaServicioResponseDto>>> GetServiciosDeReserva(int id)
+    {
+        try
+        {
+            _logger.LogInformation("🔍 Obteniendo servicios de reserva {IdReserva}", id);
+
+            var servicios = await _reservaServicioService.GetServiciosPorReservaAsync(id);
+
+            _logger.LogInformation("✅ Se encontraron {Count} servicios", servicios.Count());
+
+            return Ok(servicios);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Reserva no encontrada");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al obtener servicios de la reserva");
+            return StatusCode(500, new { message = "Error al obtener servicios de la reserva", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtener servicios de una reserva filtrados por estado
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="estado">Estado a filtrar (pendiente, confirmado, completado, cancelado)</param>
+    /// <returns>Lista de servicios filtrados</returns>
+    [HttpGet("{id}/servicios/estado/{estado}")]
+    [ProducesResponseType(typeof(IEnumerable<ReservaServicioResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<ReservaServicioResponseDto>>> GetServiciosPorEstado(int id, string estado)
+    {
+        try
+        {
+            _logger.LogInformation("🔍 Obteniendo servicios de reserva {IdReserva} con estado {Estado}", id, estado);
+
+            var servicios = await _reservaServicioService.GetServiciosPorReservaYEstadoAsync(id, estado);
+
+            _logger.LogInformation("✅ Se encontraron {Count} servicios con estado '{Estado}'", servicios.Count(), estado);
+
+            return Ok(servicios);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Reserva no encontrada");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al obtener servicios por estado");
+            return StatusCode(500, new { message = "Error al obtener servicios por estado", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Eliminar un servicio adicional de una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="idReservaServicio">ID de la relación reserva-servicio</param>
+    /// <returns>Mensaje de confirmación</returns>
+    [HttpDelete("{id}/servicios/{idReservaServicio}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> EliminarServicioDeReserva(int id, int idReservaServicio)
+    {
+        try
+        {
+            _logger.LogInformation("🗑️ Eliminando servicio {IdReservaServicio} de reserva {IdReserva}", idReservaServicio, id);
+
+            var resultado = await _reservaServicioService.EliminarServicioDeReservaAsync(idReservaServicio);
+
+            if (!resultado)
+            {
+                return BadRequest(new { message = "No se pudo eliminar el servicio" });
+            }
+
+            _logger.LogInformation("✅ Servicio eliminado exitosamente");
+
+            return Ok(new { message = "Servicio eliminado exitosamente de la reserva" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Servicio no encontrado");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Operación inválida al eliminar servicio");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al eliminar servicio de la reserva");
+            return StatusCode(500, new { message = "Error al eliminar servicio de la reserva", error = ex.Message });
         }
     }
 }

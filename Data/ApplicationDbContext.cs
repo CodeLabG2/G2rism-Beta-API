@@ -155,8 +155,10 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<ReservaPaquete> ReservasPaquetes { get; set; }
 
-    // TODO: Agregar en futuras fases
-    // public DbSet<ReservaServicio> ReservasServicios { get; set; }
+    /// <summary>
+    /// Tabla intermedia Reservas-Servicios (relación N:M)
+    /// </summary>
+    public DbSet<ReservaServicio> ReservasServicios { get; set; }
 
     // ========================================
     // CONFIGURACIÓN AVANZADA DE ENTIDADES

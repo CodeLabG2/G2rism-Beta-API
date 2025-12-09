@@ -20,6 +20,7 @@ using G2rismBeta.API.DTOs.Reserva;
 using G2rismBeta.API.DTOs.ReservaHotel;
 using G2rismBeta.API.DTOs.ReservaVuelo;
 using G2rismBeta.API.DTOs.ReservaPaquete;
+using G2rismBeta.API.DTOs.ReservaServicio;
 
 namespace G2rismBeta.API.Mappings;
 
@@ -601,5 +602,32 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.PaqueteIniciado, opt => opt.MapFrom(src => src.PaqueteIniciado))
             .ForMember(dest => dest.PaqueteCompletado, opt => opt.MapFrom(src => src.PaqueteCompletado))
             .ForMember(dest => dest.DiasHastaInicio, opt => opt.MapFrom(src => src.DiasHastaInicio));
+
+        // ========================================
+        // MAPEOS PARA RESERVA_SERVICIO
+        // ========================================
+
+        // CreateDto → Modelo (para crear)
+        CreateMap<ReservaServicioCreateDto, ReservaServicio>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore()) // El ID lo genera la BD
+            .ForMember(dest => dest.PrecioUnitario, opt => opt.Ignore()) // Se obtiene del servicio
+            .ForMember(dest => dest.Subtotal, opt => opt.Ignore()) // Se calcula en el servicio
+            .ForMember(dest => dest.FechaAgregado, opt => opt.Ignore()) // Se establece en el servicio
+            .ForMember(dest => dest.Reserva, opt => opt.Ignore()) // Navegación
+            .ForMember(dest => dest.Servicio, opt => opt.Ignore()); // Navegación
+
+        // Modelo → ResponseDto (para devolver)
+        CreateMap<ReservaServicio, ReservaServicioResponseDto>()
+            .ForMember(dest => dest.NombreServicio, opt => opt.MapFrom(src =>
+                src.Servicio != null ? src.Servicio.Nombre : null))
+            .ForMember(dest => dest.TipoServicio, opt => opt.MapFrom(src =>
+                src.Servicio != null ? src.Servicio.Tipo : null))
+            .ForMember(dest => dest.UnidadServicio, opt => opt.MapFrom(src =>
+                src.Servicio != null ? src.Servicio.Unidad : null))
+            .ForMember(dest => dest.EstaConfirmado, opt => opt.MapFrom(src => src.EstaConfirmado))
+            .ForMember(dest => dest.EstaCompletado, opt => opt.MapFrom(src => src.EstaCompletado))
+            .ForMember(dest => dest.EstaCancelado, opt => opt.MapFrom(src => src.EstaCancelado))
+            .ForMember(dest => dest.ServicioEjecutado, opt => opt.MapFrom(src => src.ServicioEjecutado))
+            .ForMember(dest => dest.DiasHastaServicio, opt => opt.MapFrom(src => src.DiasHastaServicio));
     }
 }
