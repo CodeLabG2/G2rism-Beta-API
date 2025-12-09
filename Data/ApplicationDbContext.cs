@@ -150,8 +150,12 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<ReservaVuelo> ReservasVuelos { get; set; }
 
+    /// <summary>
+    /// Tabla intermedia Reservas-Paquetes (relación N:M)
+    /// </summary>
+    public DbSet<ReservaPaquete> ReservasPaquetes { get; set; }
+
     // TODO: Agregar en futuras fases
-    // public DbSet<ReservaPaquete> ReservasPaquetes { get; set; }
     // public DbSet<ReservaServicio> ReservasServicios { get; set; }
 
     // ========================================
@@ -820,6 +824,42 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(rv => rv.IdVuelo)
                 .OnDelete(DeleteBehavior.Restrict) // No eliminar vuelo si tiene reservas
                 .HasConstraintName("fk_reserva_vuelo_vuelo");
+        });
+
+        // ========================================
+        // CONFIGURACIÓN: RESERVA_PAQUETE
+        // ========================================
+        modelBuilder.Entity<ReservaPaquete>(entity =>
+        {
+            // Índice en id_reserva para consultas rápidas
+            entity.HasIndex(e => e.IdReserva)
+                .HasDatabaseName("idx_reserva_paquete_reserva");
+
+            // Índice en id_paquete para consultas rápidas
+            entity.HasIndex(e => e.IdPaquete)
+                .HasDatabaseName("idx_reserva_paquete_paquete");
+
+            // Índice en fecha_inicio_paquete para filtrado
+            entity.HasIndex(e => e.FechaInicioPaquete)
+                .HasDatabaseName("idx_reserva_paquete_fecha_inicio");
+
+            // Índice compuesto para búsqueda de reservas de paquete
+            entity.HasIndex(e => new { e.IdPaquete, e.IdReserva })
+                .HasDatabaseName("idx_reserva_paquete_paquete_reserva");
+
+            // Relación con Reserva (N:1)
+            entity.HasOne(rp => rp.Reserva)
+                .WithMany(r => r.ReservasPaquetes)
+                .HasForeignKey(rp => rp.IdReserva)
+                .OnDelete(DeleteBehavior.Cascade) // Si se elimina la reserva, eliminar sus paquetes
+                .HasConstraintName("fk_reserva_paquete_reserva");
+
+            // Relación con PaqueteTuristico (N:1)
+            entity.HasOne(rp => rp.Paquete)
+                .WithMany() // No necesitamos navegación inversa en PaqueteTuristico
+                .HasForeignKey(rp => rp.IdPaquete)
+                .OnDelete(DeleteBehavior.Restrict) // No eliminar paquete si tiene reservas
+                .HasConstraintName("fk_reserva_paquete_paquete");
         });
     }
 }

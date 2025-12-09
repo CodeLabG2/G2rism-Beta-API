@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using G2rismBeta.API.DTOs.Reserva;
 using G2rismBeta.API.DTOs.ReservaHotel;
 using G2rismBeta.API.DTOs.ReservaVuelo;
+using G2rismBeta.API.DTOs.ReservaPaquete;
 using G2rismBeta.API.Interfaces;
 
 namespace G2rismBeta.API.Controllers;
@@ -20,6 +21,7 @@ public class ReservasController : ControllerBase
     private readonly IReservaService _reservaService;
     private readonly IReservaHotelService _reservaHotelService;
     private readonly IReservaVueloService _reservaVueloService;
+    private readonly IReservaPaqueteService _reservaPaqueteService;
     private readonly ILogger<ReservasController> _logger;
 
     /// <summary>
@@ -29,11 +31,13 @@ public class ReservasController : ControllerBase
         IReservaService reservaService,
         IReservaHotelService reservaHotelService,
         IReservaVueloService reservaVueloService,
+        IReservaPaqueteService reservaPaqueteService,
         ILogger<ReservasController> logger)
     {
         _reservaService = reservaService;
         _reservaHotelService = reservaHotelService;
         _reservaVueloService = reservaVueloService;
+        _reservaPaqueteService = reservaPaqueteService;
         _logger = logger;
     }
 
@@ -809,6 +813,168 @@ public class ReservasController : ControllerBase
         {
             _logger.LogError(ex, "❌ Error al eliminar vuelo de la reserva");
             return StatusCode(500, new { message = "Error al eliminar vuelo de la reserva", error = ex.Message });
+        }
+    }
+
+    // ========================================
+    // ENDPOINTS DE PAQUETES
+    // ========================================
+
+    /// <summary>
+    /// Agregar un paquete turístico a una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="dto">Datos del paquete a agregar</param>
+    /// <returns>Paquete agregado con todos sus detalles</returns>
+    [HttpPost("{id}/paquetes")]
+    [ProducesResponseType(typeof(ReservaPaqueteResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ReservaPaqueteResponseDto>> AgregarPaqueteAReserva(int id, [FromBody] ReservaPaqueteCreateDto dto)
+    {
+        try
+        {
+            _logger.LogInformation("📦 Agregando paquete {IdPaquete} a reserva {IdReserva}", dto.IdPaquete, id);
+
+            var paqueteAgregado = await _reservaPaqueteService.AgregarPaqueteAReservaAsync(id, dto);
+
+            _logger.LogInformation("✅ Paquete agregado exitosamente a la reserva");
+
+            return CreatedAtAction(
+                nameof(ObtenerPaquetePorId),
+                new { id, idReservaPaquete = paqueteAgregado.Id },
+                paqueteAgregado);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Reserva o paquete no encontrado");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Operación inválida al agregar paquete");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al agregar paquete a la reserva");
+            return StatusCode(500, new { message = "Error al agregar paquete a la reserva", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtener todos los paquetes de una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <returns>Lista de paquetes de la reserva</returns>
+    [HttpGet("{id}/paquetes")]
+    [ProducesResponseType(typeof(IEnumerable<ReservaPaqueteResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<ReservaPaqueteResponseDto>>> ObtenerPaquetesDeReserva(int id)
+    {
+        try
+        {
+            _logger.LogInformation("🔍 Obteniendo paquetes de la reserva {IdReserva}", id);
+
+            var paquetes = await _reservaPaqueteService.ObtenerPaquetesPorReservaAsync(id);
+
+            _logger.LogInformation("✅ Se encontraron {Count} paquetes", paquetes.Count());
+
+            return Ok(paquetes);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Reserva no encontrada");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al obtener paquetes de la reserva");
+            return StatusCode(500, new { message = "Error al obtener paquetes de la reserva", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtener un paquete específico de una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="idReservaPaquete">ID de la relación reserva-paquete</param>
+    /// <returns>Detalles del paquete</returns>
+    [HttpGet("{id}/paquetes/{idReservaPaquete}")]
+    [ProducesResponseType(typeof(ReservaPaqueteResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ReservaPaqueteResponseDto>> ObtenerPaquetePorId(int id, int idReservaPaquete)
+    {
+        try
+        {
+            _logger.LogInformation("🔍 Obteniendo paquete {IdReservaPaquete} de reserva {IdReserva}", idReservaPaquete, id);
+
+            var paquete = await _reservaPaqueteService.ObtenerPaquetePorIdAsync(idReservaPaquete);
+
+            // Validar que el paquete pertenezca a la reserva especificada
+            if (paquete.IdReserva != id)
+            {
+                _logger.LogWarning("⚠️ El paquete no pertenece a la reserva especificada");
+                return NotFound(new { message = "El paquete no pertenece a la reserva especificada" });
+            }
+
+            _logger.LogInformation("✅ Paquete encontrado: {Nombre}", paquete.NombrePaquete);
+
+            return Ok(paquete);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Paquete no encontrado");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al obtener paquete de la reserva");
+            return StatusCode(500, new { message = "Error al obtener paquete de la reserva", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Eliminar un paquete de una reserva
+    /// </summary>
+    /// <param name="id">ID de la reserva</param>
+    /// <param name="idReservaPaquete">ID de la relación reserva-paquete</param>
+    /// <returns>Mensaje de confirmación</returns>
+    [HttpDelete("{id}/paquetes/{idReservaPaquete}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> EliminarPaqueteDeReserva(int id, int idReservaPaquete)
+    {
+        try
+        {
+            _logger.LogInformation("🗑️ Eliminando paquete {IdReservaPaquete} de reserva {IdReserva}", idReservaPaquete, id);
+
+            var resultado = await _reservaPaqueteService.EliminarPaqueteDeReservaAsync(id, idReservaPaquete);
+
+            if (!resultado)
+            {
+                return BadRequest(new { message = "No se pudo eliminar el paquete" });
+            }
+
+            _logger.LogInformation("✅ Paquete eliminado exitosamente");
+
+            return Ok(new { message = "Paquete eliminado exitosamente de la reserva" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Paquete no encontrado");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "⚠️ Operación inválida al eliminar paquete");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al eliminar paquete de la reserva");
+            return StatusCode(500, new { message = "Error al eliminar paquete de la reserva", error = ex.Message });
         }
     }
 }

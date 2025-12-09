@@ -19,6 +19,7 @@ using G2rismBeta.API.DTOs.PaqueteTuristico;
 using G2rismBeta.API.DTOs.Reserva;
 using G2rismBeta.API.DTOs.ReservaHotel;
 using G2rismBeta.API.DTOs.ReservaVuelo;
+using G2rismBeta.API.DTOs.ReservaPaquete;
 
 namespace G2rismBeta.API.Mappings;
 
@@ -574,5 +575,31 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.CostoTotal, opt => opt.MapFrom(src => src.CostoTotal))
             .ForMember(dest => dest.EsClaseEjecutiva, opt => opt.MapFrom(src => src.EsClaseEjecutiva))
             .ForMember(dest => dest.TieneEquipajeExtra, opt => opt.MapFrom(src => src.TieneEquipajeExtra));
+
+        // ========================================
+        // MAPEOS PARA RESERVA_PAQUETE
+        // ========================================
+
+        // CreateDto → Modelo (para crear)
+        CreateMap<ReservaPaqueteCreateDto, ReservaPaquete>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore()) // El ID lo genera la BD
+            .ForMember(dest => dest.IdReserva, opt => opt.Ignore()) // Se establece en el servicio
+            .ForMember(dest => dest.PrecioPorPersona, opt => opt.Ignore()) // Se obtiene del paquete
+            .ForMember(dest => dest.Subtotal, opt => opt.Ignore()) // Se calcula en el servicio
+            .ForMember(dest => dest.FechaAgregado, opt => opt.Ignore()) // Se establece en el servicio
+            .ForMember(dest => dest.Reserva, opt => opt.Ignore()) // Navegación
+            .ForMember(dest => dest.Paquete, opt => opt.Ignore()); // Navegación
+
+        // Modelo → ResponseDto (para devolver)
+        CreateMap<ReservaPaquete, ReservaPaqueteResponseDto>()
+            .ForMember(dest => dest.NombrePaquete, opt => opt.MapFrom(src =>
+                src.Paquete != null ? src.Paquete.Nombre : null))
+            .ForMember(dest => dest.DestinoPrincipal, opt => opt.MapFrom(src =>
+                src.Paquete != null ? src.Paquete.DestinoPrincipal : null))
+            .ForMember(dest => dest.DuracionDias, opt => opt.MapFrom(src => src.DuracionDias))
+            .ForMember(dest => dest.SubtotalFormateado, opt => opt.MapFrom(src => src.SubtotalFormateado))
+            .ForMember(dest => dest.PaqueteIniciado, opt => opt.MapFrom(src => src.PaqueteIniciado))
+            .ForMember(dest => dest.PaqueteCompletado, opt => opt.MapFrom(src => src.PaqueteCompletado))
+            .ForMember(dest => dest.DiasHastaInicio, opt => opt.MapFrom(src => src.DiasHastaInicio));
     }
 }
