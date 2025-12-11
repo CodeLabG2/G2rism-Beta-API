@@ -268,6 +268,22 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new PermissionRequirement("hoteles.eliminar")));
 
     // ====================================================
+    // POLICIES BASADAS EN PERMISOS - MÓDULO SERVICIOS ADICIONALES
+    // ====================================================
+
+    options.AddPolicy("RequirePermission:servicios.crear", policy =>
+        policy.Requirements.Add(new PermissionRequirement("servicios.crear")));
+
+    options.AddPolicy("RequirePermission:servicios.leer", policy =>
+        policy.Requirements.Add(new PermissionRequirement("servicios.leer")));
+
+    options.AddPolicy("RequirePermission:servicios.actualizar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("servicios.actualizar")));
+
+    options.AddPolicy("RequirePermission:servicios.eliminar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("servicios.eliminar")));
+
+    // ====================================================
     // NOTA: Policies adicionales pueden agregarse dinámicamente
     // o crearse on-demand usando el formato "RequirePermission:{permiso}"
     // ====================================================

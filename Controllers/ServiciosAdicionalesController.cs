@@ -134,7 +134,7 @@ public class ServiciosAdicionalesController : ControllerBase
     ///         "precio": 85000,
     ///         "unidad": "persona",
     ///         "disponibilidad": true,
-    ///         "tiempoEstimado": 180,
+    ///         "tiempoEstimado": "3:00",
     ///         "ubicacion": "Plaza de Bolívar",
     ///         "capacidadMaxima": 15,
     ///         "edadMinima": 5,
@@ -144,7 +144,7 @@ public class ServiciosAdicionalesController : ControllerBase
     ///
     /// </remarks>
     [HttpPost]
-    [Authorize(Policy = "servicios.crear")]
+    [Authorize(Policy = "RequirePermission:servicios.crear")]
     [ProducesResponseType(typeof(ApiResponse<ServicioAdicionalResponseDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<ServicioAdicionalResponseDto>>> Create([FromBody] ServicioAdicionalCreateDto servicioDto)
@@ -174,7 +174,7 @@ public class ServiciosAdicionalesController : ControllerBase
     /// <param name="servicioDto">Datos a actualizar (todos los campos son opcionales)</param>
     /// <returns>Servicio actualizado</returns>
     [HttpPut("{id}")]
-    [Authorize(Policy = "servicios.actualizar")]
+    [Authorize(Policy = "RequirePermission:servicios.actualizar")]
     [ProducesResponseType(typeof(ApiResponse<ServicioAdicionalResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -199,7 +199,7 @@ public class ServiciosAdicionalesController : ControllerBase
     /// <param name="id">ID del servicio a eliminar</param>
     /// <returns>Confirmación de eliminación</returns>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "servicios.eliminar")]
+    [Authorize(Policy = "RequirePermission:servicios.eliminar")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)

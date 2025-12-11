@@ -174,6 +174,13 @@ public class ServicioAdicionalService : IServicioAdicionalService
 
         // Mapear y crear
         var servicio = _mapper.Map<ServicioAdicional>(servicioDto);
+
+        // Convertir tiempo estimado de formato "H:mm" a minutos
+        if (!string.IsNullOrEmpty(servicioDto.TiempoEstimado))
+        {
+            servicio.TiempoEstimado = ConvertirTiempoAMinutos(servicioDto.TiempoEstimado);
+        }
+
         servicio.FechaCreacion = DateTime.Now;
 
         await _servicioRepository.AddAsync(servicio);
@@ -224,6 +231,13 @@ public class ServicioAdicionalService : IServicioAdicionalService
 
         // Mapear cambios (solo los campos no nulos)
         _mapper.Map(servicioDto, servicio);
+
+        // Convertir tiempo estimado de formato "H:mm" a minutos si se está actualizando
+        if (!string.IsNullOrEmpty(servicioDto.TiempoEstimado))
+        {
+            servicio.TiempoEstimado = ConvertirTiempoAMinutos(servicioDto.TiempoEstimado);
+        }
+
         servicio.FechaModificacion = DateTime.Now;
 
         await _servicioRepository.UpdateAsync(servicio);
@@ -257,5 +271,25 @@ public class ServicioAdicionalService : IServicioAdicionalService
 
         _logger.LogInformation("✅ Servicio adicional eliminado (soft delete) exitosamente");
         return true;
+    }
+
+    /// <summary>
+    /// Convierte un tiempo en formato "H:mm" o "HH:mm" a minutos totales
+    /// </summary>
+    /// <param name="tiempo">Tiempo en formato "H:mm" (ejemplo: "2:30" para 2 horas y 30 minutos)</param>
+    /// <returns>Total de minutos</returns>
+    private int? ConvertirTiempoAMinutos(string tiempo)
+    {
+        if (string.IsNullOrEmpty(tiempo))
+            return null;
+
+        var parts = tiempo.Split(':');
+        if (parts.Length != 2)
+            return null;
+
+        if (!int.TryParse(parts[0], out int horas) || !int.TryParse(parts[1], out int minutos))
+            return null;
+
+        return (horas * 60) + minutos;
     }
 }

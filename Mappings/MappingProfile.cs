@@ -437,6 +437,7 @@ public class MappingProfile : Profile
         // CreateDto → Modelo (para crear)
         CreateMap<ServicioAdicionalCreateDto, ServicioAdicional>()
             .ForMember(dest => dest.IdServicio, opt => opt.Ignore()) // El ID lo genera la BD
+            .ForMember(dest => dest.TiempoEstimado, opt => opt.Ignore()) // Se convierte manualmente en el service (string → int)
             .ForMember(dest => dest.FechaCreacion, opt => opt.Ignore()) // Se asigna en el service
             .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore())
             .ForMember(dest => dest.Proveedor, opt => opt.Ignore());
@@ -444,10 +445,25 @@ public class MappingProfile : Profile
         // UpdateDto → Modelo (para actualizar - solo actualiza campos no nulos)
         CreateMap<ServicioAdicionalUpdateDto, ServicioAdicional>()
             .ForMember(dest => dest.IdServicio, opt => opt.Ignore())
+            .ForMember(dest => dest.TiempoEstimado, opt => opt.Ignore()) // Se convierte manualmente en el service (string → int)
             .ForMember(dest => dest.FechaCreacion, opt => opt.Ignore())
             .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore()) // Se asigna en el service
             .ForMember(dest => dest.Proveedor, opt => opt.Ignore())
-            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+            // Condiciones explícitas para tipos de valor nullable (evitar que 0/false se mapeen cuando no se envían)
+            .ForMember(dest => dest.IdProveedor, opt => opt.Condition(src => src.IdProveedor.HasValue && src.IdProveedor.Value > 0))
+            .ForMember(dest => dest.Precio, opt => opt.Condition(src => src.Precio.HasValue))
+            .ForMember(dest => dest.Disponibilidad, opt => opt.Condition(src => src.Disponibilidad.HasValue))
+            .ForMember(dest => dest.CapacidadMaxima, opt => opt.Condition(src => src.CapacidadMaxima.HasValue))
+            .ForMember(dest => dest.EdadMinima, opt => opt.Condition(src => src.EdadMinima.HasValue))
+            .ForMember(dest => dest.Estado, opt => opt.Condition(src => src.Estado.HasValue))
+            .ForAllMembers(opt => opt.Condition((src, dest, srcMember, destMember) =>
+            {
+                // Si es null, no mapear
+                if (srcMember == null) return false;
+
+                // Los tipos de valor nullable ya están controlados explícitamente arriba
+                return true;
+            }));
 
         // Modelo → ResponseDto (para devolver)
         CreateMap<ServicioAdicional, ServicioAdicionalResponseDto>()

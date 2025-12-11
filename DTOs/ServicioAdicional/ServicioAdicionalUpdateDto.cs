@@ -42,9 +42,9 @@ public class ServicioAdicionalUpdateDto
     public bool? Disponibilidad { get; set; }
 
     /// <summary>
-    /// Tiempo estimado del servicio en minutos (opcional)
+    /// Tiempo estimado del servicio en formato "HH:mm" o "H:mm" (ejemplo: "2:30" = 2 horas y 30 minutos) (opcional)
     /// </summary>
-    public int? TiempoEstimado { get; set; }
+    public string? TiempoEstimado { get; set; }
 
     /// <summary>
     /// Ubicación o punto de encuentro del servicio (opcional, máx 500 caracteres)

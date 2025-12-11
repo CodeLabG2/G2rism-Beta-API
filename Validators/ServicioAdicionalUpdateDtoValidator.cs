@@ -64,13 +64,13 @@ public class ServicioAdicionalUpdateDtoValidator : AbstractValidator<ServicioAdi
             .WithMessage($"Unidad inválida. Valores permitidos: {string.Join(", ", UnidadesPermitidas)}")
             .When(x => !string.IsNullOrEmpty(x.Unidad));
 
-        // Tiempo estimado
+        // Tiempo estimado (formato HH:mm o H:mm)
         RuleFor(x => x.TiempoEstimado)
-            .GreaterThan(0)
-            .WithMessage("El tiempo estimado debe ser mayor a 0 minutos")
-            .LessThanOrEqualTo(1440)
-            .WithMessage("El tiempo estimado no puede exceder 1440 minutos (24 horas)")
-            .When(x => x.TiempoEstimado.HasValue);
+            .Must(BeValidTimeFormat)
+            .WithMessage("El tiempo estimado debe estar en formato 'H:mm' o 'HH:mm' (ejemplo: '2:30' para 2 horas y 30 minutos)")
+            .Must(BeWithin24Hours)
+            .WithMessage("El tiempo estimado no puede exceder 24 horas")
+            .When(x => !string.IsNullOrEmpty(x.TiempoEstimado));
 
         // Ubicación
         RuleFor(x => x.Ubicacion)
@@ -124,5 +124,42 @@ public class ServicioAdicionalUpdateDtoValidator : AbstractValidator<ServicioAdi
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Valida que el tiempo esté en formato H:mm o HH:mm (ejemplo: "2:30" o "02:30")
+    /// </summary>
+    private bool BeValidTimeFormat(string? tiempo)
+    {
+        if (string.IsNullOrEmpty(tiempo))
+            return true;
+
+        var parts = tiempo.Split(':');
+        if (parts.Length != 2)
+            return false;
+
+        if (!int.TryParse(parts[0], out int horas) || !int.TryParse(parts[1], out int minutos))
+            return false;
+
+        return horas >= 0 && minutos >= 0 && minutos < 60;
+    }
+
+    /// <summary>
+    /// Valida que el tiempo no exceda 24 horas
+    /// </summary>
+    private bool BeWithin24Hours(string? tiempo)
+    {
+        if (string.IsNullOrEmpty(tiempo))
+            return true;
+
+        var parts = tiempo.Split(':');
+        if (parts.Length != 2)
+            return false;
+
+        if (!int.TryParse(parts[0], out int horas) || !int.TryParse(parts[1], out int minutos))
+            return false;
+
+        int totalMinutos = (horas * 60) + minutos;
+        return totalMinutos <= 1440; // 24 horas = 1440 minutos
     }
 }
