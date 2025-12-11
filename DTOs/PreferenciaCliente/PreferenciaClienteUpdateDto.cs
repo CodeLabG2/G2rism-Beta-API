@@ -4,17 +4,11 @@ namespace G2rismBeta.API.DTOs.PreferenciaCliente;
 
 /// <summary>
 /// DTO para actualizar preferencias de un cliente
-/// Permite modificar las preferencias existentes
+/// Permite modificar las preferencias existentes (actualización parcial)
+/// Solo se actualizan los campos que se envían (no nulos)
 /// </summary>
 public class PreferenciaClienteUpdateDto
 {
-    /// <summary>
-    /// ID de la preferencia a actualizar
-    /// </summary>
-    /// <example>1</example>
-    [Required(ErrorMessage = "El ID de la preferencia es obligatorio")]
-    public int IdPreferencia { get; set; }
-
     /// <summary>
     /// Tipo de destino preferido
     /// </summary>

@@ -223,19 +223,24 @@ public class MappingProfile : Profile
         CreateMap<PreferenciaClienteCreateDto, PreferenciaCliente>()
             .ForMember(dest => dest.IdPreferencia, opt => opt.Ignore()) // El ID lo genera la BD
             .ForMember(dest => dest.FechaActualizacion, opt => opt.MapFrom(src => DateTime.Now))
+            .ForMember(dest => dest.Intereses, opt => opt.Ignore()) // Se maneja en el servicio (conversión a JSON)
             .ForMember(dest => dest.Cliente, opt => opt.Ignore());
 
-        // UpdateDto → Modelo (para actualizar)
+        // UpdateDto → Modelo (para actualizar - soporta actualizaciones parciales)
         CreateMap<PreferenciaClienteUpdateDto, PreferenciaCliente>()
             .ForMember(dest => dest.IdPreferencia, opt => opt.Ignore())
             .ForMember(dest => dest.IdCliente, opt => opt.Ignore()) // No se puede cambiar el cliente
-            .ForMember(dest => dest.FechaActualizacion, opt => opt.MapFrom(src => DateTime.Now))
-            .ForMember(dest => dest.Cliente, opt => opt.Ignore());
+            .ForMember(dest => dest.FechaActualizacion, opt => opt.Ignore()) // Se establece en el servicio
+            .ForMember(dest => dest.Intereses, opt => opt.Ignore()) // Se maneja en el servicio (conversión a JSON)
+            .ForMember(dest => dest.Cliente, opt => opt.Ignore())
+            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null)); // Solo actualiza campos no nulos
 
         // Modelo → ResponseDto (para devolver)
         CreateMap<PreferenciaCliente, PreferenciaClienteResponseDto>()
             .ForMember(dest => dest.NombreCliente, opt => opt.MapFrom(src =>
-                src.Cliente != null ? $"{src.Cliente.Nombre} {src.Cliente.Apellido}" : null));
+                src.Cliente != null ? $"{src.Cliente.Nombre} {src.Cliente.Apellido}" : null))
+            .ForMember(dest => dest.Intereses, opt => opt.MapFrom(src =>
+                DeserializeIntereses(src.Intereses)));
 
         // ========================================
         // MAPEOS PARA EMPLEADO (CRM)
@@ -771,5 +776,29 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.EstaRechazado, opt => opt.MapFrom(src => src.EstaRechazado))
             .ForMember(dest => dest.DiasDesdeElPago, opt => opt.MapFrom(src => src.DiasDesdeElPago))
             .ForMember(dest => dest.TieneComprobante, opt => opt.MapFrom(src => src.TieneComprobante));
+    }
+
+    // ========================================
+    // MÉTODOS AUXILIARES PARA MAPEOS
+    // ========================================
+
+    /// <summary>
+    /// Deserializa el campo JSON Intereses del modelo a una lista de strings
+    /// </summary>
+    private static List<string>? DeserializeIntereses(string? interesesJson)
+    {
+        if (string.IsNullOrEmpty(interesesJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(interesesJson);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
