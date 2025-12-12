@@ -171,27 +171,34 @@ public class PagoService : IPagoService
         var montoAnterior = pago.Monto;
         var estadoAnterior = pago.Estado;
 
-        // Aplicar actualizaciones
-        _mapper.Map(updateDto, pago);
-        pago.FechaModificacion = DateTime.Now;
+        // Actualizar campos individualmente solo si no son null (actualizaciones parciales)
+        // IMPORTANTE: No usar AutoMapper aquí porque sobrescribe campos no enviados con valores por defecto
 
-        // Si el estado cambió, normalizar
-        if (!string.IsNullOrWhiteSpace(updateDto.Estado))
-        {
-            pago.Estado = updateDto.Estado.ToLower();
-        }
+        if (updateDto.Monto.HasValue)
+            pago.Monto = updateDto.Monto.Value;
 
-        // Verificar cambios en referencia de transacción
-        if (!string.IsNullOrWhiteSpace(updateDto.ReferenciaTransaccion) &&
-            updateDto.ReferenciaTransaccion != pago.ReferenciaTransaccion)
+        if (!string.IsNullOrWhiteSpace(updateDto.ReferenciaTransaccion))
         {
+            // Verificar que la referencia no exista
             var existeReferencia = await _pagoRepository.ExistePorReferenciaAsync(updateDto.ReferenciaTransaccion);
             if (existeReferencia)
             {
                 throw new InvalidOperationException(
                     $"Ya existe un pago con la referencia de transacción '{updateDto.ReferenciaTransaccion}'");
             }
+            pago.ReferenciaTransaccion = updateDto.ReferenciaTransaccion;
         }
+
+        if (updateDto.ComprobantePago != null)
+            pago.ComprobantePago = updateDto.ComprobantePago;
+
+        if (!string.IsNullOrWhiteSpace(updateDto.Estado))
+            pago.Estado = updateDto.Estado.ToLower();
+
+        if (updateDto.Observaciones != null)
+            pago.Observaciones = updateDto.Observaciones;
+
+        pago.FechaModificacion = DateTime.Now;
 
         await _pagoRepository.UpdateAsync(pago);
         await _pagoRepository.SaveChangesAsync();

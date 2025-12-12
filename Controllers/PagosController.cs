@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using G2rismBeta.API.DTOs.Pago;
 using G2rismBeta.API.Interfaces;
@@ -9,10 +10,12 @@ namespace G2rismBeta.API.Controllers;
 /// Controlador para la gestión de Pagos en el sistema de turismo.
 /// Permite registrar, consultar y gestionar los pagos realizados sobre las facturas.
 /// FUNCIONALIDAD CLAVE: Actualiza automáticamente los montos de facturas y reservas.
+/// Requiere autenticación JWT. Autorización basada en permisos granulares.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class PagosController : ControllerBase
 {
     private readonly IPagoService _pagoService;
@@ -132,7 +135,9 @@ public class PagosController : ControllerBase
     /// <response code="201">Pago registrado exitosamente</response>
     /// <response code="400">Datos inválidos o monto excede saldo pendiente</response>
     /// <response code="404">Factura o forma de pago no encontrada</response>
+    /// <response code="403">Si el usuario no tiene el permiso pagos.crear</response>
     [HttpPost]
+    [Authorize(Policy = "RequirePermission:pagos.crear")]
     [ProducesResponseType(typeof(ApiResponse<PagoResponseDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -164,7 +169,9 @@ public class PagosController : ControllerBase
     /// <response code="200">Pago actualizado exitosamente</response>
     /// <response code="404">Pago no encontrado</response>
     /// <response code="400">Datos inválidos</response>
+    /// <response code="403">Si el usuario no tiene el permiso pagos.actualizar</response>
     [HttpPut("{id}")]
+    [Authorize(Policy = "RequirePermission:pagos.actualizar")]
     [ProducesResponseType(typeof(ApiResponse<PagoResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -192,7 +199,9 @@ public class PagosController : ControllerBase
     /// <response code="200">Estado actualizado exitosamente</response>
     /// <response code="404">Pago no encontrado</response>
     /// <response code="400">Estado inválido</response>
+    /// <response code="403">Si el usuario no tiene el permiso pagos.actualizar</response>
     [HttpPatch("{id}/estado")]
+    [Authorize(Policy = "RequirePermission:pagos.actualizar")]
     [ProducesResponseType(typeof(ApiResponse<PagoResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -219,7 +228,9 @@ public class PagosController : ControllerBase
     /// <response code="200">Pago eliminado exitosamente</response>
     /// <response code="404">Pago no encontrado</response>
     /// <response code="400">No se puede eliminar (el pago no está pendiente)</response>
+    /// <response code="403">Si el usuario no tiene el permiso pagos.eliminar</response>
     [HttpDelete("{id}")]
+    [Authorize(Policy = "RequirePermission:pagos.eliminar")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]

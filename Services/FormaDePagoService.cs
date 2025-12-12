@@ -151,8 +151,20 @@ public class FormaDePagoService : IFormaDePagoService
             }
         }
 
-        // Mapear cambios (AutoMapper ignora nulls)
-        _mapper.Map(updateDto, formaDePago);
+        // Actualizar campos individualmente solo si no son null (actualizaciones parciales)
+        // IMPORTANTE: No usar AutoMapper aquí porque sobrescribe campos no enviados con valores por defecto
+        if (updateDto.Metodo != null)
+            formaDePago.Metodo = updateDto.Metodo;
+
+        if (updateDto.RequiereVerificacion.HasValue)
+            formaDePago.RequiereVerificacion = updateDto.RequiereVerificacion.Value;
+
+        if (updateDto.Activo.HasValue)
+            formaDePago.Activo = updateDto.Activo.Value;
+
+        if (updateDto.Descripcion != null)
+            formaDePago.Descripcion = updateDto.Descripcion;
+
         formaDePago.FechaModificacion = DateTime.Now;
 
         await _formaDePagoRepository.UpdateAsync(formaDePago);

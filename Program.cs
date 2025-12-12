@@ -315,6 +315,49 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new PermissionRequirement("reservas.eliminar")));
 
     // ====================================================
+    // POLICIES BASADAS EN PERMISOS - MÓDULO FINANCIERO
+    // ====================================================
+
+    // Formas de Pago
+    options.AddPolicy("RequirePermission:formasdepago.crear", policy =>
+        policy.Requirements.Add(new PermissionRequirement("formasdepago.crear")));
+
+    options.AddPolicy("RequirePermission:formasdepago.leer", policy =>
+        policy.Requirements.Add(new PermissionRequirement("formasdepago.leer")));
+
+    options.AddPolicy("RequirePermission:formasdepago.actualizar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("formasdepago.actualizar")));
+
+    options.AddPolicy("RequirePermission:formasdepago.eliminar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("formasdepago.eliminar")));
+
+    // Facturas
+    options.AddPolicy("RequirePermission:facturas.crear", policy =>
+        policy.Requirements.Add(new PermissionRequirement("facturas.crear")));
+
+    options.AddPolicy("RequirePermission:facturas.leer", policy =>
+        policy.Requirements.Add(new PermissionRequirement("facturas.leer")));
+
+    options.AddPolicy("RequirePermission:facturas.actualizar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("facturas.actualizar")));
+
+    options.AddPolicy("RequirePermission:facturas.eliminar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("facturas.eliminar")));
+
+    // Pagos
+    options.AddPolicy("RequirePermission:pagos.crear", policy =>
+        policy.Requirements.Add(new PermissionRequirement("pagos.crear")));
+
+    options.AddPolicy("RequirePermission:pagos.leer", policy =>
+        policy.Requirements.Add(new PermissionRequirement("pagos.leer")));
+
+    options.AddPolicy("RequirePermission:pagos.actualizar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("pagos.actualizar")));
+
+    options.AddPolicy("RequirePermission:pagos.eliminar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("pagos.eliminar")));
+
+    // ====================================================
     // NOTA: Policies adicionales pueden agregarse dinámicamente
     // o crearse on-demand usando el formato "RequirePermission:{permiso}"
     // ====================================================

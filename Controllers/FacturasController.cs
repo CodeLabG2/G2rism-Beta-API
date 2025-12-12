@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using G2rismBeta.API.DTOs.Factura;
 using G2rismBeta.API.Interfaces;
@@ -8,10 +9,12 @@ namespace G2rismBeta.API.Controllers;
 /// <summary>
 /// Controlador para la gestión de Facturas en el sistema de turismo.
 /// Permite generar facturas desde reservas, consultar, actualizar y gestionar el estado de las facturas.
+/// Requiere autenticación JWT. Autorización basada en permisos granulares.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class FacturasController : ControllerBase
 {
     private readonly IFacturaService _facturaService;
@@ -195,7 +198,9 @@ public class FacturasController : ControllerBase
     /// <response code="201">Factura creada exitosamente</response>
     /// <response code="400">Datos inválidos o reserva sin confirmar</response>
     /// <response code="404">Reserva no encontrada</response>
+    /// <response code="403">Si el usuario no tiene el permiso facturas.crear</response>
     [HttpPost]
+    [Authorize(Policy = "RequirePermission:facturas.crear")]
     [ProducesResponseType(typeof(ApiResponse<FacturaResponseDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -225,7 +230,9 @@ public class FacturasController : ControllerBase
     /// <response code="200">Factura actualizada exitosamente</response>
     /// <response code="400">Datos inválidos o factura ya pagada/cancelada</response>
     /// <response code="404">Factura no encontrada</response>
+    /// <response code="403">Si el usuario no tiene el permiso facturas.actualizar</response>
     [HttpPut("{id}")]
+    [Authorize(Policy = "RequirePermission:facturas.actualizar")]
     [ProducesResponseType(typeof(ApiResponse<FacturaResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -252,7 +259,9 @@ public class FacturasController : ControllerBase
     /// <response code="200">Estado actualizado exitosamente</response>
     /// <response code="400">Estado inválido</response>
     /// <response code="404">Factura no encontrada</response>
+    /// <response code="403">Si el usuario no tiene el permiso facturas.actualizar</response>
     [HttpPatch("{id}/estado")]
+    [Authorize(Policy = "RequirePermission:facturas.actualizar")]
     [ProducesResponseType(typeof(ApiResponse<FacturaResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
@@ -280,7 +289,9 @@ public class FacturasController : ControllerBase
     /// <response code="200">Factura cancelada exitosamente</response>
     /// <response code="400">Factura ya pagada o tiene pagos aprobados</response>
     /// <response code="404">Factura no encontrada</response>
+    /// <response code="403">Si el usuario no tiene el permiso facturas.eliminar</response>
     [HttpDelete("{id}")]
+    [Authorize(Policy = "RequirePermission:facturas.eliminar")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]

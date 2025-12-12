@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using G2rismBeta.API.DTOs.FormaDePago;
 using G2rismBeta.API.Interfaces;
@@ -8,10 +9,12 @@ namespace G2rismBeta.API.Controllers;
 /// <summary>
 /// Controlador para la gestión de Formas de Pago en el sistema de turismo.
 /// Permite gestionar los métodos de pago disponibles (efectivo, tarjetas, transferencias, etc.).
+/// Requiere autenticación JWT. Autorización basada en permisos granulares.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class FormasDePagoController : ControllerBase
 {
     private readonly IFormaDePagoService _formaDePagoService;
@@ -143,7 +146,9 @@ public class FormasDePagoController : ControllerBase
     /// <returns>Forma de pago creada</returns>
     /// <response code="201">Forma de pago creada exitosamente</response>
     /// <response code="400">Datos inválidos o el método ya existe</response>
+    /// <response code="403">Si el usuario no tiene el permiso formasdepago.crear</response>
     [HttpPost]
+    [Authorize(Policy = "RequirePermission:formasdepago.crear")]
     [ProducesResponseType(typeof(ApiResponse<FormaDePagoResponseDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<FormaDePagoResponseDto>>> Create([FromBody] FormaDePagoCreateDto createDto)
@@ -172,7 +177,9 @@ public class FormasDePagoController : ControllerBase
     /// <response code="200">Forma de pago actualizada exitosamente</response>
     /// <response code="404">Forma de pago no encontrada</response>
     /// <response code="400">Datos inválidos o el nuevo método ya existe</response>
+    /// <response code="403">Si el usuario no tiene el permiso formasdepago.actualizar</response>
     [HttpPut("{id}")]
+    [Authorize(Policy = "RequirePermission:formasdepago.actualizar")]
     [ProducesResponseType(typeof(ApiResponse<FormaDePagoResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
@@ -198,7 +205,9 @@ public class FormasDePagoController : ControllerBase
     /// <response code="200">Forma de pago eliminada exitosamente</response>
     /// <response code="404">Forma de pago no encontrada</response>
     /// <response code="400">No se puede eliminar porque tiene pagos asociados</response>
+    /// <response code="403">Si el usuario no tiene el permiso formasdepago.eliminar</response>
     [HttpDelete("{id}")]
+    [Authorize(Policy = "RequirePermission:formasdepago.eliminar")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
