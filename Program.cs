@@ -284,6 +284,22 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new PermissionRequirement("servicios.eliminar")));
 
     // ====================================================
+    // POLICIES BASADAS EN PERMISOS - MÓDULO PAQUETES TURÍSTICOS
+    // ====================================================
+
+    options.AddPolicy("RequirePermission:paquetes.crear", policy =>
+        policy.Requirements.Add(new PermissionRequirement("paquetes.crear")));
+
+    options.AddPolicy("RequirePermission:paquetes.leer", policy =>
+        policy.Requirements.Add(new PermissionRequirement("paquetes.leer")));
+
+    options.AddPolicy("RequirePermission:paquetes.actualizar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("paquetes.actualizar")));
+
+    options.AddPolicy("RequirePermission:paquetes.eliminar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("paquetes.eliminar")));
+
+    // ====================================================
     // NOTA: Policies adicionales pueden agregarse dinámicamente
     // o crearse on-demand usando el formato "RequirePermission:{permiso}"
     // ====================================================

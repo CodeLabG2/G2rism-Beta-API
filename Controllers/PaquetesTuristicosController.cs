@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using G2rismBeta.API.DTOs.PaqueteTuristico;
 using G2rismBeta.API.Interfaces;
 using G2rismBeta.API.Models;
@@ -194,9 +195,14 @@ public class PaquetesTuristicosController : ControllerBase
     /// <returns>Paquete turístico creado</returns>
     /// <response code="201">Paquete turístico creado exitosamente</response>
     /// <response code="400">Si los datos son inválidos o ya existe un paquete con el mismo nombre</response>
+    /// <response code="401">Si el usuario no está autenticado</response>
+    /// <response code="403">Si el usuario no tiene el permiso paquetes.crear</response>
     [HttpPost]
+    [Authorize(Policy = "RequirePermission:paquetes.crear")]
     [ProducesResponseType(typeof(ApiResponse<PaqueteTuristicoResponseDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<PaqueteTuristicoResponseDto>>> Create(
         [FromBody] PaqueteTuristicoCreateDto paqueteDto)
     {
@@ -239,10 +245,15 @@ public class PaquetesTuristicosController : ControllerBase
     /// <response code="200">Paquete turístico actualizado exitosamente</response>
     /// <response code="400">Si los datos son inválidos</response>
     /// <response code="404">Si el paquete turístico no existe</response>
+    /// <response code="401">Si el usuario no está autenticado</response>
+    /// <response code="403">Si el usuario no tiene el permiso paquetes.actualizar</response>
     [HttpPut("{id}")]
+    [Authorize(Policy = "RequirePermission:paquetes.actualizar")]
     [ProducesResponseType(typeof(ApiResponse<PaqueteTuristicoResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<PaqueteTuristicoResponseDto>>> Update(
         int id,
         [FromBody] PaqueteTuristicoUpdateDto paqueteDto)
@@ -291,9 +302,14 @@ public class PaquetesTuristicosController : ControllerBase
     /// <returns>Resultado de la operación</returns>
     /// <response code="200">Paquete turístico eliminado exitosamente</response>
     /// <response code="404">Si el paquete turístico no existe</response>
+    /// <response code="401">Si el usuario no está autenticado</response>
+    /// <response code="403">Si el usuario no tiene el permiso paquetes.eliminar</response>
     [HttpDelete("{id}")]
+    [Authorize(Policy = "RequirePermission:paquetes.eliminar")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {
         _logger.LogInformation("🗑️ Eliminando paquete turístico con ID: {Id}", id);

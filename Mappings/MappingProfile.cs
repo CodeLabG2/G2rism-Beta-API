@@ -484,12 +484,12 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.FechaCreacion, opt => opt.Ignore()) // Se asigna en el service
             .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore());
 
-        // UpdateDto → Modelo (para actualizar - solo actualiza campos no nulos)
+        // UpdateDto → Modelo (para actualizar - NO SE USA, se hace mapeo manual en el service)
+        // Se usa asignación manual campo por campo en PaqueteTuristicoService.UpdateAsync para mayor control
         CreateMap<PaqueteTuristicoUpdateDto, PaqueteTuristico>()
             .ForMember(dest => dest.IdPaquete, opt => opt.Ignore())
             .ForMember(dest => dest.FechaCreacion, opt => opt.Ignore())
-            .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore()) // Se asigna en el service
-            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+            .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore()); // Se asigna en el service
 
         // Modelo → ResponseDto (para devolver)
         CreateMap<PaqueteTuristico, PaqueteTuristicoResponseDto>()

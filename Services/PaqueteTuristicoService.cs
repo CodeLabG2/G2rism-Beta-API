@@ -178,8 +178,73 @@ public class PaqueteTuristicoService : IPaqueteTuristicoService
             }
         }
 
-        // Mapear cambios (AutoMapper ignorará valores null)
-        _mapper.Map(paqueteDto, paquete);
+        // Actualizar campos individualmente solo si no son null (actualizaciones parciales)
+        if (!string.IsNullOrEmpty(paqueteDto.Nombre))
+            paquete.Nombre = paqueteDto.Nombre;
+
+        if (paqueteDto.Detalle != null)
+            paquete.Detalle = paqueteDto.Detalle;
+
+        if (!string.IsNullOrEmpty(paqueteDto.DestinoPrincipal))
+            paquete.DestinoPrincipal = paqueteDto.DestinoPrincipal;
+
+        if (paqueteDto.DestinosAdicionales != null)
+            paquete.DestinosAdicionales = paqueteDto.DestinosAdicionales;
+
+        if (paqueteDto.Duracion.HasValue)
+            paquete.Duracion = paqueteDto.Duracion.Value;
+
+        if (paqueteDto.Precio.HasValue)
+            paquete.Precio = paqueteDto.Precio.Value;
+
+        if (paqueteDto.CuposDisponibles.HasValue)
+            paquete.CuposDisponibles = paqueteDto.CuposDisponibles.Value;
+
+        if (paqueteDto.Incluye != null)
+            paquete.Incluye = paqueteDto.Incluye;
+
+        if (paqueteDto.NoIncluye != null)
+            paquete.NoIncluye = paqueteDto.NoIncluye;
+
+        if (paqueteDto.FechaInicio.HasValue)
+            paquete.FechaInicio = paqueteDto.FechaInicio;
+
+        if (paqueteDto.FechaFin.HasValue)
+            paquete.FechaFin = paqueteDto.FechaFin;
+
+        if (paqueteDto.TipoPaquete != null)
+            paquete.TipoPaquete = paqueteDto.TipoPaquete;
+
+        if (paqueteDto.NivelDificultad != null)
+            paquete.NivelDificultad = paqueteDto.NivelDificultad;
+
+        if (paqueteDto.EdadMinima.HasValue)
+            paquete.EdadMinima = paqueteDto.EdadMinima;
+
+        if (paqueteDto.NumeroMinimoPersonas.HasValue)
+            paquete.NumeroMinimoPersonas = paqueteDto.NumeroMinimoPersonas;
+
+        if (paqueteDto.NumeroMaximoPersonas.HasValue)
+            paquete.NumeroMaximoPersonas = paqueteDto.NumeroMaximoPersonas;
+
+        if (paqueteDto.Requisitos != null)
+            paquete.Requisitos = paqueteDto.Requisitos;
+
+        if (paqueteDto.Recomendaciones != null)
+            paquete.Recomendaciones = paqueteDto.Recomendaciones;
+
+        if (paqueteDto.Imagenes != null)
+            paquete.Imagenes = paqueteDto.Imagenes;
+
+        if (paqueteDto.ItinerarioResumido != null)
+            paquete.ItinerarioResumido = paqueteDto.ItinerarioResumido;
+
+        if (paqueteDto.PoliticasCancelacion != null)
+            paquete.PoliticasCancelacion = paqueteDto.PoliticasCancelacion;
+
+        if (paqueteDto.Estado.HasValue)
+            paquete.Estado = paqueteDto.Estado.Value;
+
         paquete.FechaModificacion = DateTime.Now;
 
         // Guardar cambios
