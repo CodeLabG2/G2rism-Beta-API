@@ -450,20 +450,20 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.FechaModificacion, opt => opt.Ignore()) // Se asigna en el service
             .ForMember(dest => dest.Proveedor, opt => opt.Ignore())
             // Condiciones explícitas para tipos de valor nullable (evitar que 0/false se mapeen cuando no se envían)
-            .ForMember(dest => dest.IdProveedor, opt => opt.Condition(src => src.IdProveedor.HasValue && src.IdProveedor.Value > 0))
+            .ForMember(dest => dest.IdProveedor, opt => opt.Condition(src => src.IdProveedor.HasValue))
             .ForMember(dest => dest.Precio, opt => opt.Condition(src => src.Precio.HasValue))
             .ForMember(dest => dest.Disponibilidad, opt => opt.Condition(src => src.Disponibilidad.HasValue))
             .ForMember(dest => dest.CapacidadMaxima, opt => opt.Condition(src => src.CapacidadMaxima.HasValue))
             .ForMember(dest => dest.EdadMinima, opt => opt.Condition(src => src.EdadMinima.HasValue))
             .ForMember(dest => dest.Estado, opt => opt.Condition(src => src.Estado.HasValue))
-            .ForAllMembers(opt => opt.Condition((src, dest, srcMember, destMember) =>
-            {
-                // Si es null, no mapear
-                if (srcMember == null) return false;
-
-                // Los tipos de valor nullable ya están controlados explícitamente arriba
-                return true;
-            }));
+            // Condición para campos string (solo mapear si no son null o empty)
+            .ForMember(dest => dest.Nombre, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.Nombre)))
+            .ForMember(dest => dest.Tipo, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.Tipo)))
+            .ForMember(dest => dest.Descripcion, opt => opt.Condition(src => src.Descripcion != null))
+            .ForMember(dest => dest.Unidad, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.Unidad)))
+            .ForMember(dest => dest.Ubicacion, opt => opt.Condition(src => src.Ubicacion != null))
+            .ForMember(dest => dest.Requisitos, opt => opt.Condition(src => src.Requisitos != null))
+            .ForMember(dest => dest.IdiomasDisponibles, opt => opt.Condition(src => src.IdiomasDisponibles != null));
 
         // Modelo → ResponseDto (para devolver)
         CreateMap<ServicioAdicional, ServicioAdicionalResponseDto>()
