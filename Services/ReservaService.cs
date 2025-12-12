@@ -207,8 +207,28 @@ public class ReservaService : IReservaService
             }
         }
 
-        // 6. Aplicar cambios usando AutoMapper (solo actualiza campos no nulos)
-        _mapper.Map(reservaUpdateDto, reservaExistente);
+        // 6. Actualizar campos individualmente solo si no son null (actualizaciones parciales)
+        // IMPORTANTE: No usar AutoMapper aquí porque sobrescribe campos no enviados con valores por defecto
+        if (reservaUpdateDto.IdEmpleado.HasValue)
+            reservaExistente.IdEmpleado = reservaUpdateDto.IdEmpleado.Value;
+
+        if (reservaUpdateDto.Descripcion != null)
+            reservaExistente.Descripcion = reservaUpdateDto.Descripcion;
+
+        if (reservaUpdateDto.FechaInicioViaje.HasValue)
+            reservaExistente.FechaInicioViaje = reservaUpdateDto.FechaInicioViaje.Value;
+
+        if (reservaUpdateDto.FechaFinViaje.HasValue)
+            reservaExistente.FechaFinViaje = reservaUpdateDto.FechaFinViaje.Value;
+
+        if (reservaUpdateDto.NumeroPasajeros.HasValue)
+            reservaExistente.NumeroPasajeros = reservaUpdateDto.NumeroPasajeros.Value;
+
+        if (reservaUpdateDto.Estado != null)
+            reservaExistente.Estado = reservaUpdateDto.Estado;
+
+        if (reservaUpdateDto.Observaciones != null)
+            reservaExistente.Observaciones = reservaUpdateDto.Observaciones;
 
         // 7. Actualizar fecha de modificación
         reservaExistente.FechaModificacion = DateTime.Now;

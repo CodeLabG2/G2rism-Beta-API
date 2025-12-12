@@ -300,6 +300,21 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new PermissionRequirement("paquetes.eliminar")));
 
     // ====================================================
+    // POLICIES BASADAS EN PERMISOS - MÓDULO RESERVAS
+    // ====================================================
+    options.AddPolicy("RequirePermission:reservas.crear", policy =>
+        policy.Requirements.Add(new PermissionRequirement("reservas.crear")));
+
+    options.AddPolicy("RequirePermission:reservas.leer", policy =>
+        policy.Requirements.Add(new PermissionRequirement("reservas.leer")));
+
+    options.AddPolicy("RequirePermission:reservas.actualizar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("reservas.actualizar")));
+
+    options.AddPolicy("RequirePermission:reservas.eliminar", policy =>
+        policy.Requirements.Add(new PermissionRequirement("reservas.eliminar")));
+
+    // ====================================================
     // NOTA: Policies adicionales pueden agregarse dinámicamente
     // o crearse on-demand usando el formato "RequirePermission:{permiso}"
     // ====================================================

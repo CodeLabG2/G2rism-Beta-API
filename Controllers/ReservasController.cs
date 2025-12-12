@@ -12,11 +12,11 @@ namespace G2rismBeta.API.Controllers;
 /// <summary>
 /// Controlador para la gestión de Reservas
 /// Endpoints para operaciones CRUD básicas de reservas
-/// Requiere autenticación. Accesible para empleados (Super Admin, Admin, Empleado).
+/// Requiere autenticación JWT. Autorización basada en permisos granulares.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Super Administrador,Administrador,Empleado")]
+[Authorize]
 public class ReservasController : ControllerBase
 {
     private readonly IReservaService _reservaService;
@@ -219,7 +219,9 @@ public class ReservasController : ControllerBase
     /// <response code="201">Reserva creada exitosamente</response>
     /// <response code="400">Datos inválidos o reglas de negocio no cumplidas</response>
     /// <response code="404">Cliente o empleado no encontrado</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.crear</response>
     [HttpPost]
+    [Authorize(Policy = "RequirePermission:reservas.crear")]
     [ProducesResponseType(typeof(ReservaResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -277,7 +279,9 @@ public class ReservasController : ControllerBase
     /// <response code="200">Reserva actualizada exitosamente</response>
     /// <response code="400">Datos inválidos o reglas de negocio no cumplidas</response>
     /// <response code="404">Reserva no encontrada</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.actualizar</response>
     [HttpPut("{id}")]
+    [Authorize(Policy = "RequirePermission:reservas.actualizar")]
     [ProducesResponseType(typeof(ReservaResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -329,7 +333,9 @@ public class ReservasController : ControllerBase
     /// <response code="200">Reserva confirmada exitosamente</response>
     /// <response code="400">La reserva no puede ser confirmada (estado inválido)</response>
     /// <response code="404">Reserva no encontrada</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.actualizar</response>
     [HttpPost("{id}/confirmar")]
+    [Authorize(Policy = "RequirePermission:reservas.actualizar")]
     [ProducesResponseType(typeof(ReservaResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -376,7 +382,9 @@ public class ReservasController : ControllerBase
     /// <response code="200">Reserva cancelada exitosamente</response>
     /// <response code="400">La reserva no puede ser cancelada (ya está cancelada o completada)</response>
     /// <response code="404">Reserva no encontrada</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.eliminar</response>
     [HttpPost("{id}/cancelar")]
+    [Authorize(Policy = "RequirePermission:reservas.eliminar")]
     [ProducesResponseType(typeof(ReservaResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -438,7 +446,9 @@ public class ReservasController : ControllerBase
     /// <response code="201">Hotel agregado exitosamente a la reserva</response>
     /// <response code="400">Datos inválidos o reglas de negocio no cumplidas</response>
     /// <response code="404">Reserva o Hotel no encontrado</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.crear</response>
     [HttpPost("{id}/hoteles")]
+    [Authorize(Policy = "RequirePermission:reservas.crear")]
     [ProducesResponseType(typeof(ReservaHotelResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -573,7 +583,9 @@ public class ReservasController : ControllerBase
     /// </remarks>
     /// <response code="200">Hotel eliminado exitosamente de la reserva</response>
     /// <response code="404">Hotel no encontrado en esta reserva</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.eliminar</response>
     [HttpDelete("{id}/hoteles/{idReservaHotel}")]
+    [Authorize(Policy = "RequirePermission:reservas.eliminar")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> EliminarHotelDeReserva(int id, int idReservaHotel)
@@ -640,7 +652,9 @@ public class ReservasController : ControllerBase
     /// <response code="201">Vuelo agregado exitosamente a la reserva</response>
     /// <response code="400">Datos inválidos o reglas de negocio no cumplidas</response>
     /// <response code="404">Reserva o Vuelo no encontrado</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.crear</response>
     [HttpPost("{id}/vuelos")]
+    [Authorize(Policy = "RequirePermission:reservas.crear")]
     [ProducesResponseType(typeof(ReservaVueloResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -786,7 +800,9 @@ public class ReservasController : ControllerBase
     /// </remarks>
     /// <response code="200">Vuelo eliminado exitosamente de la reserva</response>
     /// <response code="404">Vuelo no encontrado en esta reserva</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.eliminar</response>
     [HttpDelete("{id}/vuelos/{idReservaVuelo}")]
+    [Authorize(Policy = "RequirePermission:reservas.eliminar")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> EliminarVueloDeReserva(int id, int idReservaVuelo)
@@ -830,7 +846,9 @@ public class ReservasController : ControllerBase
     /// <param name="id">ID de la reserva</param>
     /// <param name="dto">Datos del paquete a agregar</param>
     /// <returns>Paquete agregado con todos sus detalles</returns>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.crear</response>
     [HttpPost("{id}/paquetes")]
+    [Authorize(Policy = "RequirePermission:reservas.crear")]
     [ProducesResponseType(typeof(ReservaPaqueteResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -944,7 +962,9 @@ public class ReservasController : ControllerBase
     /// <param name="id">ID de la reserva</param>
     /// <param name="idReservaPaquete">ID de la relación reserva-paquete</param>
     /// <returns>Mensaje de confirmación</returns>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.eliminar</response>
     [HttpDelete("{id}/paquetes/{idReservaPaquete}")]
+    [Authorize(Policy = "RequirePermission:reservas.eliminar")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -992,7 +1012,9 @@ public class ReservasController : ControllerBase
     /// <param name="id">ID de la reserva</param>
     /// <param name="dto">Datos del servicio a agregar</param>
     /// <returns>Servicio agregado</returns>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.crear</response>
     [HttpPost("{id}/servicios")]
+    [Authorize(Policy = "RequirePermission:reservas.crear")]
     [ProducesResponseType(typeof(ReservaServicioResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -1102,7 +1124,9 @@ public class ReservasController : ControllerBase
     /// <param name="id">ID de la reserva</param>
     /// <param name="idReservaServicio">ID de la relación reserva-servicio</param>
     /// <returns>Mensaje de confirmación</returns>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.eliminar</response>
     [HttpDelete("{id}/servicios/{idReservaServicio}")]
+    [Authorize(Policy = "RequirePermission:reservas.eliminar")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -1202,7 +1226,9 @@ public class ReservasController : ControllerBase
     /// <response code="201">Reserva completa creada exitosamente con todos los servicios</response>
     /// <response code="400">Datos inválidos o reglas de negocio no cumplidas</response>
     /// <response code="404">Cliente, empleado o algún servicio no encontrado</response>
+    /// <response code="403">Si el usuario no tiene el permiso reservas.crear</response>
     [HttpPost("completa")]
+    [Authorize(Policy = "RequirePermission:reservas.crear")]
     [ProducesResponseType(typeof(ReservaResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
