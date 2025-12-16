@@ -499,14 +499,22 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Configurar CORS (importante para cuando conecten el frontend)
+// ========================================
+// CONFIGURACIÓN DE CORS PARA FRONTEND
+// ========================================
+
+var securitySettings = builder.Configuration.GetSection("Security");
+var allowedOrigins = securitySettings.GetSection("AllowedFrontendUrls").Get<string[]>()
+    ?? new[] { "http://localhost:3000" };
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("G2rismPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials(); // IMPORTANTE: Permite envío de cookies/tokens
     });
 });
 
@@ -550,12 +558,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "G2rism Beta API v1");
-        c.RoutePrefix = string.Empty; // Swagger en la raíz (http://localhost:5000/)
+        c.RoutePrefix = string.Empty; // Swagger en la raíz (http://localhost:5026/)
     });
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("G2rismPolicy"); // CORS
 
 // Middleware de Rate Limiting (antes de autenticación)
 app.UseRateLimiter();
@@ -573,7 +581,7 @@ Console.WriteLine("║              CodeLabG2 - Sistema de Turismo            �
 Console.WriteLine("╚════════════════════════════════════════════════════════╝");
 Console.WriteLine();
 Console.WriteLine("✅ API iniciada correctamente");
-Console.WriteLine("📄 Documentación: http://localhost:5000/");
+Console.WriteLine("📄 Documentación: http://localhost:5026/");
 Console.WriteLine("🔧 Módulos activos:");
 Console.WriteLine("   • Configuración (Roles y Permisos)");
 Console.WriteLine("   • Usuarios (Gestión y Autenticación)");
